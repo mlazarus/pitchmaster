@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitch Game Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #1557b0;
+            --secondary: #34a853;
+            --accent: #ea4335;
+            --background: #f8f9fa;
+            --card: #ffffff;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --border: #dadce0;
+            --bump: #ff6a6a;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1.25rem 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1.5rem 2rem 0;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-family: inherit;
+            position: relative;
+            bottom: -2px;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            margin-bottom: 0.5rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .player-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--background);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .player-item:hover {
+            background: rgba(26, 115, 232, 0.1);
+        }
+
+        .team-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .team-a {
+            background: #e8f5e9;
+            color: var(--secondary);
+        }
+
+        .team-b {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--background);
+            font-weight: 600;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--card);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            display: block;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 Pitch Game Tracker</h1>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" id="tab-game">Game</button>
+        <button class="tab" id="tab-players">Players</button>
+        <button class="tab" id="tab-stats">Stats</button>
+    </div>
+
+    <div class="container">
+        <!-- Game Tab -->
+        <div id="content-game" class="tab-content active">
+            <div class="card">
+                <h2>Game #<span id="game-number">1</span></h2>
+                <p><strong>Current Dealer:</strong> <span id="current-dealer">Not selected</span></p>
+                
+                <input type="number" id="score-a" placeholder="Team A Score" step="0.5">
+                <input type="number" id="score-b" placeholder="Team B Score" step="0.5">
+                
+                <button class="btn" id="btn-add-score">Add Score</button>
+                <button class="btn" id="btn-dealers" style="background: var(--secondary); margin-top: 0.5rem;">Select Dealers</button>
+                <button class="btn" id="btn-end-game" style="background: var(--accent); margin-top: 0.5rem;">End Game</button>
+                
+                <h3 style="margin-top: 2rem;">Scores</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;">
+                    <div>
+                        <h4>Team A</h4>
+                        <div class="score-display" id="total-a">0</div>
+                        <div id="players-a">No players</div>
+                    </div>
+                    <div>
+                        <h4>Team B</h4>
+                        <div class="score-display" id="total-b" style="color: #f57c00;">0</div>
+                        <div id="players-b">No players</div>
+                    </div>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dealer</th>
+                            <th>Team A</th>
+                            <th>Team B</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hands-table">
+                        <tr><td colspan="3">No hands yet</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Players Tab -->
+        <div id="content-players" class="tab-content">
+            <div class="card">
+                <h2>Manage Players</h2>
+                
+                <input type="text" id="new-player-name" placeholder="Player name" maxlength="8">
+                <button class="btn" id="btn-add-player">Add Player</button>
+                
+                <h3 style="margin-top: 2rem;">Players (Click to assign teams)</h3>
+                <div id="player-list"></div>
+                
+                <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.875rem;">
+                    Click: None → Team A → Team B → None
+                </p>
+            </div>
+        </div>
+
+        <!-- Stats Tab -->
+        <div id="content-stats" class="tab-content">
+            <div class="card">
+                <h2>Statistics</h2>
+                <p>Games played: <span id="stat-games">0</span></p>
+                <p>Total hands: <span id="stat-hands">0</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        console.log('Script started');
+        
+        // Simple data storage
+        let gameData = {
+            players: ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank'],
+            teamA: [],
+            teamB: [],
+            dealers: [],
+            hands: [],
+            gameNumber: 1
+        };
+
+        // Load from localStorage
+        const saved = localStorage.getItem('pitchGame');
+        if (saved) {
+            gameData = JSON.parse(saved);
+        }
+
+        function save() {
+            localStorage.setItem('pitchGame', JSON.stringify(gameData));
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // Update displays
+        function updateUI() {
+            console.log('Updating UI');
+            
+            // Update players display
+            document.getElementById('players-a').textContent = gameData.teamA.join(', ') || 'No players';
+            document.getElementById('players-b').textContent = gameData.teamB.join(', ') || 'No players';
+            
+            // Update totals
+            let totalA = 0, totalB = 0;
+            gameData.hands.forEach(h => {
+                totalA += h.scoreA;
+                totalB += h.scoreB;
+            });
+            document.getElementById('total-a').textContent = totalA.toFixed(1);
+            document.getElementById('total-b').textContent = totalB.toFixed(1);
+            
+            // Update hands table
+            const tbody = document.getElementById('hands-table');
+            if (gameData.hands.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3">No hands yet</td></tr>';
+            } else {
+                let runningA = 0, runningB = 0;
+                tbody.innerHTML = gameData.hands.map(h => {
+                    runningA += h.scoreA;
+                    runningB += h.scoreB;
+                    return `<tr>
+                        <td>${h.dealer}</td>
+                        <td>${runningA.toFixed(1)}</td>
+                        <td>${runningB.toFixed(1)}</td>
+                    </tr>`;
+                }).join('');
+            }
+            
+            // Update dealer
+            const dealerIdx = gameData.hands.length % gameData.dealers.length;
+            document.getElementById('current-dealer').textContent = 
+                gameData.dealers[dealerIdx] || 'Not selected';
+            
+            // Update player list
+            updatePlayerList();
+        }
+
+        function updatePlayerList() {
+            const list = document.getElementById('player-list');
+            list.innerHTML = '';
+            
+            gameData.players.forEach(player => {
+                const div = document.createElement('div');
+                div.className = 'player-item';
+                
+                let badge = '';
+                if (gameData.teamA.includes(player)) {
+                    badge = '<span class="team-badge team-a">Team A</span>';
+                } else if (gameData.teamB.includes(player)) {
+                    badge = '<span class="team-badge team-b">Team B</span>';
+                }
+                
+                div.innerHTML = `<span>${player}</span>${badge}`;
+                
+                // Add click handler
+                div.onclick = function() {
+                    console.log('Clicked player:', player);
+                    
+                    // Cycle: None → Team A → Team B → None
+                    if (!gameData.teamA.includes(player) && !gameData.teamB.includes(player)) {
+                        // Add to Team A
+                        if (gameData.teamA.length < 3) {
+                            gameData.teamA.push(player);
+                            showToast(player + ' → Team A');
+                        } else {
+                            showToast('Team A is full');
+                            return;
+                        }
+                    } else if (gameData.teamA.includes(player)) {
+                        // Move to Team B
+                        gameData.teamA = gameData.teamA.filter(p => p !== player);
+                        if (gameData.teamB.length < 3) {
+                            gameData.teamB.push(player);
+                            showToast(player + ' → Team B');
+                        } else {
+                            showToast('Team B is full');
+                            return;
+                        }
+                    } else {
+                        // Remove from Team B
+                        gameData.teamB = gameData.teamB.filter(p => p !== player);
+                        showToast(player + ' removed');
+                    }
+                    
+                    save();
+                    updateUI();
+                };
+                
+                list.appendChild(div);
+            });
+        }
+
+        // Tab switching
+        document.getElementById('tab-game').onclick = () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-game').classList.add('active');
+            document.getElementById('content-game').classList.add('active');
+        };
+
+        document.getElementById('tab-players').onclick = () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-players').classList.add('active');
+            document.getElementById('content-players').classList.add('active');
+        };
+
+        document.getElementById('tab-stats').onclick = () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-stats').classList.add('active');
+            document.getElementById('content-stats').classList.add('active');
+        };
+
+        // Add player
+        document.getElementById('btn-add-player').onclick = () => {
+            const name = document.getElementById('new-player-name').value.trim();
+            if (!name) {
+                showToast('Enter a name');
+                return;
+            }
+            if (gameData.players.includes(name)) {
+                showToast('Player exists');
+                return;
+            }
+            gameData.players.push(name);
+            document.getElementById('new-player-name').value = '';
+            save();
+            updateUI();
+            showToast(name + ' added!');
+        };
+
+        // Add score
+        document.getElementById('btn-add-score').onclick = () => {
+            const scoreA = parseFloat(document.getElementById('score-a').value);
+            const scoreB = parseFloat(document.getElementById('score-b').value);
+            
+            if (isNaN(scoreA) || isNaN(scoreB)) {
+                showToast('Enter valid scores');
+                return;
+            }
+            
+            if (gameData.dealers.length === 0) {
+                showToast('Select dealers first');
+                return;
+            }
+            
+            const dealerIdx = gameData.hands.length % gameData.dealers.length;
+            gameData.hands.push({
+                dealer: gameData.dealers[dealerIdx],
+                scoreA,
+                scoreB
+            });
+            
+            document.getElementById('score-a').value = '';
+            document.getElementById('score-b').value = '';
+            save();
+            updateUI();
+            showToast('Score added!');
+        };
+
+        // Select dealers
+        document.getElementById('btn-dealers').onclick = () => {
+            const allPlayers = [...gameData.teamA, ...gameData.teamB];
+            if (allPlayers.length < 4) {
+                showToast('Need at least 4 players in teams');
+                return;
+            }
+            
+            // Simple method: just use the first 4 players in order
+            if (allPlayers.length >= 4) {
+                gameData.dealers = allPlayers.slice(0, 4);
+                save();
+                updateUI();
+                showToast('Dealers set: ' + gameData.dealers.join(', '));
+            } else {
+                showToast('Need exactly 4 players across both teams');
+            }
+        };
+
+        // Calculate final score with custom rules
+        function calculateFinalScore(winner) {
+            const totals = { a: 0, b: 0 };
+            gameData.hands.forEach(h => {
+                totals.a += h.scoreA;
+                totals.b += h.scoreB;
+            });
+            
+            // Count bumps (when running total goes down)
+            let bumpsA = 0, bumpsB = 0;
+            let runningA = 0, runningB = 0;
+            let prevA = 0, prevB = 0;
+            
+            gameData.hands.forEach(h => {
+                runningA += h.scoreA;
+                runningB += h.scoreB;
+                if (runningA < prevA) bumpsA++;
+                if (runningB < prevB) bumpsB++;
+                prevA = runningA;
+                prevB = runningB;
+            });
+            
+            // Get last hand gain
+            const lastHand = gameData.hands[gameData.hands.length - 1];
+            const lastGainA = lastHand ? lastHand.scoreA : 0;
+            const lastGainB = lastHand ? lastHand.scoreB : 0;
+            
+            const stakes = gameData.stakes || { gameScore: 4, bump: 2, points: 1 };
+            
+            let finalScoreA = 0;
+            let finalScoreB = 0;
+            
+            if (winner === 'A') {
+                // Team A wins
+                const difference = Math.max(0, totals.a - totals.b);
+                const baseScore = stakes.gameScore + (bumpsB * stakes.bump);
+                let multiplier = 1;
+                
+                // Check special bonuses
+                if (lastGainA >= 2 && lastGainA <= 4 && totals.b <= 0) {
+                    multiplier = 2; // Double
+                } else if (lastGainA === 9 && totals.b >= 1) {
+                    multiplier = 2; // Double
+                } else if (lastGainA === 9 && totals.b <= 0) {
+                    multiplier = 4; // Quadruple
+                } else if (lastGainA === 15 && totals.b >= 1) {
+                    multiplier = 3; // Triple
+                } else if (lastGainA === 15 && totals.b <= 0) {
+                    multiplier = 6; // 6x
+                }
+                
+                finalScoreA = (baseScore * multiplier) + (difference * stakes.points);
+                finalScoreB = -finalScoreA; // Loser gets negative
+                
+            } else {
+                // Team B wins
+                const difference = Math.max(0, totals.b - totals.a);
+                const baseScore = stakes.gameScore + (bumpsA * stakes.bump);
+                let multiplier = 1;
+                
+                // Check special bonuses
+                if (lastGainB >= 2 && lastGainB <= 4 && totals.a <= 0) {
+                    multiplier = 2;
+                } else if (lastGainB === 9 && totals.a >= 1) {
+                    multiplier = 2;
+                } else if (lastGainB === 9 && totals.a <= 0) {
+                    multiplier = 4;
+                } else if (lastGainB === 15 && totals.a >= 1) {
+                    multiplier = 3;
+                } else if (lastGainB === 15 && totals.a <= 0) {
+                    multiplier = 6;
+                }
+                
+                finalScoreB = (baseScore * multiplier) + (difference * stakes.points);
+                finalScoreA = -finalScoreB;
+            }
+            
+            return {
+                scoreA: finalScoreA,
+                scoreB: finalScoreB,
+                bumpsA: bumpsA,
+                bumpsB: bumpsB,
+                runningA: totals.a,
+                runningB: totals.b
+            };
+        }
+        
+        // End game with winner selection modal
+        document.getElementById('btn-end-game').onclick = () => {
+            if (gameData.hands.length === 0) {
+                showToast('No hands played');
+                return;
+            }
+            
+            const totals = { a: 0, b: 0 };
+            gameData.hands.forEach(h => {
+                totals.a += h.scoreA;
+                totals.b += h.scoreB;
+            });
+            
+            if (Math.max(totals.a, totals.b) < 9) {
+                showToast('Winner must have at least 9 points');
+                return;
+            }
+            
+            // Show winner selection with calculated scores
+            const winnerA = calculateFinalScore('A');
+            const winnerB = calculateFinalScore('B');
+            
+            const choice = confirm(
+                `SELECT WINNER:
+                
+Team A:
+- Running Total: ${totals.a.toFixed(1)}
+- Final Score: ${winnerA.scoreA.toFixed(1)} points
+- Opponent Bumps: ${winnerA.bumpsB}
+
+Team B:
+- Running Total: ${totals.b.toFixed(1)}
+- Final Score: ${winnerB.scoreB.toFixed(1)} points
+- Opponent Bumps: ${winnerB.bumpsA}
+
+Click OK for Team A
+Click Cancel for Team B`
+            );
+            
+            const winner = choice ? 'A' : 'B';
+            const finalScore = choice ? winnerA : winnerB;
+            
+            // Save game result
+            if (!gameData.completedGames) {
+                gameData.completedGames = [];
+            }
+            
+            gameData.completedGames.push({
+                gameNumber: gameData.gameNumber,
+                winner: winner,
+                scoreA: finalScore.scoreA,
+                scoreB: finalScore.scoreB,
+                runningA: finalScore.runningA,
+                runningB: finalScore.runningB,
+                bumpsA: finalScore.bumpsA,
+                bumpsB: finalScore.bumpsB,
+                handsPlayed: gameData.hands.length,
+                teamA: [...gameData.teamA],
+                teamB: [...gameData.teamB],
+                date: new Date().toISOString()
+            });
+            
+            showToast(`Game ${gameData.gameNumber} completed! Team ${winner} wins ${Math.abs(winner === 'A' ? finalScore.scoreA : finalScore.scoreB).toFixed(1)} points!`);
+            
+            // Reset for new game
+            gameData.hands = [];
+            gameData.gameNumber++;
+            document.getElementById('game-number').textContent = gameData.gameNumber;
+            
+            save();
+            updateUI();
+            updateStats();
+        };
+
+        // Initialize
+        console.log('Initializing...');
+        updateUI();
+        console.log('Ready!');
+    </script>
+</body>
+</html>
