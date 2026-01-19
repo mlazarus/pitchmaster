@@ -67,8 +67,7 @@
                     <strong>Dealer Rotation:</strong>
                     <div id="dealer-list" style="margin-top: 0.5rem; display: flex; gap: 1rem; flex-wrap: wrap;"></div>
                 </div>
-                <input type="number" id="score-a" placeholder="Team A Score" step="0.5">
-                <input type="number" id="score-b" placeholder="Team B Score" step="0.5">
+                
                 <button class="btn" id="btn-add-score">Add Score</button>
                 <button class="btn" id="btn-dealers" style="background: #34a853;">Select Dealers</button>
                 <button class="btn" id="btn-reset-dealers" style="background: #f57c00;">Reset Dealers</button>
@@ -141,6 +140,22 @@
         
     </div>
     <div class="toast" id="toast"></div>
+
+<div class="modal" id="score-modal">
+    <div class="modal-content">
+        <h2>Add Score</h2>
+        <p style="color: #5f6368; margin: 1rem 0;">Enter scores for this hand</p>
+        <label><strong>Team A Score:</strong></label>
+        <input type="number" id="score-a-modal" placeholder="Team A Score" step="0.5" style="width: 100%; margin-bottom: 1rem;">
+        <label><strong>Team B Score:</strong></label>
+        <input type="number" id="score-b-modal" placeholder="Team B Score" step="0.5" style="width: 100%; margin-bottom: 1rem;">
+        <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
+            <button class="btn" id="btn-confirm-score">Add Score</button>
+            <button class="btn" id="btn-cancel-score" style="background: #5f6368;">Cancel</button>
+        </div>
+    </div>
+</div>
+    
     <div class="modal" id="dealer-modal">
         <div class="modal-content">
             <h2>Select Dealer Order</h2>
@@ -308,8 +323,43 @@ document.getElementById('btn-add-player').onclick = function() {
     }); 
 };
 
-document.getElementById('btn-add-score').onclick = function() { var sA = parseFloat(document.getElementById('score-a').value), sB = parseFloat(document.getElementById('score-b').value); if (isNaN(sA) || isNaN(sB)) { toast('Enter valid scores'); return; } if (g.dealers.length === 0) { toast('Select dealers first'); return; } var d = g.dealers[g.hands.length % g.dealers.length]; sb.from('hands').insert({ game_id: g.currentGameId, dealer: d, score_a: sA, score_b: sB, hand_order: g.hands.length }).then(function() { g.hands.push({ dealer: d, scoreA: sA, scoreB: sB }); document.getElementById('score-a').value = ''; document.getElementById('score-b').value = ''; updateUI(); toast('Score added!'); }); };
+document.getElementById('btn-add-score').onclick = function() {
+    if (g.dealers.length === 0) {
+        toast('Select dealers first');
+        return;
+    }
+    document.getElementById('score-a-modal').value = '';
+    document.getElementById('score-b-modal').value = '';
+    document.getElementById('score-modal').classList.add('show');
+    document.getElementById('score-a-modal').focus();
+};
 
+document.getElementById('btn-confirm-score').onclick = function() {
+    var sA = parseFloat(document.getElementById('score-a-modal').value);
+    var sB = parseFloat(document.getElementById('score-b-modal').value);
+    if (isNaN(sA) || isNaN(sB)) {
+        toast('Enter valid scores');
+        return;
+    }
+    var d = g.dealers[g.hands.length % g.dealers.length];
+    sb.from('hands').insert({
+        game_id: g.currentGameId,
+        dealer: d,
+        score_a: sA,
+        score_b: sB,
+        hand_order: g.hands.length
+    }).then(function() {
+        g.hands.push({ dealer: d, scoreA: sA, scoreB: sB });
+        document.getElementById('score-modal').classList.remove('show');
+        updateUI();
+        toast('Score added!');
+    });
+};
+
+document.getElementById('btn-cancel-score').onclick = function() {
+    document.getElementById('score-modal').classList.remove('show');
+};
+        
 document.getElementById('btn-dealers').onclick = function() { 
     var all = g.teamA.concat(g.teamB); 
     if (all.length < 4) { toast('Need 4+ players'); return; }
