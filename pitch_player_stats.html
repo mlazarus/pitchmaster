@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitch Player Statistics</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8f9fa; color: #202124; }
+        .header { background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%); color: white; padding: 1.25rem 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1rem; }
+        .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; background: #1a73e8; color: white; margin-right: 0.5rem; margin-top: 0.5rem; }
+        input[type="date"] { width: 100%; padding: 0.75rem; border: 2px solid #dadce0; border-radius: 8px; font-size: 1rem; margin-bottom: 0.5rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #dadce0; }
+        th { background: #f8f9fa; font-weight: 600; position: sticky; top: 0; }
+        tr:hover { background: #f8f9fa; }
+        .positive { color: #34a853; font-weight: 600; }
+        .negative { color: #ea4335; font-weight: 600; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 2rem; font-weight: 700; color: #1a73e8; }
+        .stat-label { font-size: 0.875rem; color: #5f6368; margin-top: 0.5rem; }
+        .filter-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; margin-bottom: 1rem; }
+        .toast { position: fixed; bottom: 2rem; right: 2rem; background: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; z-index: 1000; }
+        .toast.show { display: block; }
+        @media (max-width: 768px) {
+            .filter-row { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Pitch Player Statistics</h1>
+        <p style="margin-top: 0.5rem; opacity: 0.9;">Performance analytics across all tables</p>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <h2>Date Range Filter</h2>
+            <div class="filter-row">
+                <div>
+                    <label><strong>Start Date:</strong></label>
+                    <input type="date" id="stat-start-date">
+                </div>
+                <div>
+                    <label><strong>End Date:</strong></label>
+                    <input type="date" id="stat-end-date">
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button class="btn" id="btn-load-stats">Load Stats</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="summary-stats" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-games">0</div>
+                    <div class="stat-label">Total Games</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-players">0</div>
+                    <div class="stat-label">Active Players</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="date-range-display">-</div>
+                    <div class="stat-label">Date Range</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="results-card" style="display: none;">
+            <h2>Player Leaderboard</h2>
+            <div id="player-stats-results"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+var sb = window.supabase.createClient('https://lhlnjggrljdgmytmoaqb.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxobG5qZ2dybGpkZ215dG1vYXFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzMjUwNjAsImV4cCI6MjA4MzkwMTA2MH0.61TrFDb3XD14y26_aOhMqcrmgORDnrB7OmRdGlABgKI');
+
+function toast(m) {
+    var t = document.getElementById('toast');
+    t.textContent = m;
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+// Set default dates (last 30 days)
+var today = new Date();
+var thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+document.getElementById('stat-end-date').valueAsDate = today;
+document.getElementById('stat-start-date').valueAsDate = thirtyDaysAgo;
+
+document.getElementById('btn-load-stats').onclick = function() {
+    var startDate = document.getElementById('stat-start-date').value;
+    var endDate = document.getElementById('stat-end-date').value;
+    
+    if (!startDate || !endDate) {
+        toast('Please select both start and end dates');
+        return;
+    }
+
+    if (new Date(startDate) > new Date(endDate)) {
+        toast('Start date must be before end date');
+        return;
+    }
+
+    var startISO = new Date(startDate).toISOString();
+    var endISO = new Date(endDate + 'T23:59:59').toISOString();
+
+    toast('Loading statistics...');
+
+    sb.from('games')
+        .select('*')
+        .gte('completed_at', startISO)
+        .lte('completed_at', endISO)
+        .not('winner', 'is', null)
+        .then(function(r) {
+            if (!r.data || r.data.length === 0) {
+                document.getElementById('results-card').style.display = 'none';
+                document.getElementById('summary-stats').style.display = 'none';
+                toast('No games found in this date range');
+                return;
+            }
+
+            var playerStats = {};
+            var totalGames = r.data.length;
+
+            r.data.forEach(function(game) {
+                var teamAPlayers = game.team_a_players || [];
+                var teamBPlayers = game.team_b_players || [];
+                var scoreA = parseFloat(game.score_a) || 0;
+                var scoreB = parseFloat(game.score_b) || 0;
+
+                teamAPlayers.forEach(function(p) {
+                    if (!playerStats[p]) {
+                        playerStats[p] = {
+                            games: 0,
+                            wins: 0,
+                            losses: 0,
+                            totalEarnings: 0,
+                            gamesWon: [],
+                            gamesLost: []
+                        };
+                    }
+                    playerStats[p].games++;
+                    var share = scoreA / teamAPlayers.length;
+                    playerStats[p].totalEarnings += share;
+                    
+                    if (game.winner === 'TeamA') {
+                        playerStats[p].wins++;
+                        playerStats[p].gamesWon.push(share);
+                    } else {
+                        playerStats[p].losses++;
+                        playerStats[p].gamesLost.push(share);
+                    }
+                });
+
+                teamBPlayers.forEach(function(p) {
+                    if (!playerStats[p]) {
+                        playerStats[p] = {
+                            games: 0,
+                            wins: 0,
+                            losses: 0,
+                            totalEarnings: 0,
+                            gamesWon: [],
+                            gamesLost: []
+                        };
+                    }
+                    playerStats[p].games++;
+                    var share = scoreB / teamBPlayers.length;
+                    playerStats[p].totalEarnings += share;
+                    
+                    if (game.winner === 'TeamB') {
+                        playerStats[p].wins++;
+                        playerStats[p].gamesWon.push(share);
+                    } else {
+                        playerStats[p].losses++;
+                        playerStats[p].gamesLost.push(share);
+                    }
+                });
+            });
+
+            // Update summary stats
+            document.getElementById('total-games').textContent = totalGames;
+            document.getElementById('total-players').textContent = Object.keys(playerStats).length;
+            document.getElementById('date-range-display').textContent = 
+                new Date(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + 
+                ' - ' + 
+                new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            document.getElementById('summary-stats').style.display = 'block';
+
+            // Sort players by total earnings
+            var sortedPlayers = Object.keys(playerStats).sort(function(a, b) {
+                return playerStats[b].totalEarnings - playerStats[a].totalEarnings;
+            });
+
+            // Build table
+            var html = '<table><thead><tr>';
+            html += '<th>Rank</th>';
+            html += '<th>Player</th>';
+            html += '<th>Games</th>';
+            html += '<th>Wins</th>';
+            html += '<th>Losses</th>';
+            html += '<th>Win %</th>';
+            html += '<th>Total Earnings</th>';
+            html += '<th>Avg/Game</th>';
+            html += '</tr></thead><tbody>';
+
+            sortedPlayers.forEach(function(p, index) {
+                var stats = playerStats[p];
+                var winPct = (stats.wins / stats.games * 100).toFixed(1);
+                var avgPerGame = (stats.totalEarnings / stats.games).toFixed(1);
+                var earningsClass = stats.totalEarnings >= 0 ? 'positive' : 'negative';
+                
+                var rankDisplay = index + 1;
+                if (index === 0) rankDisplay = '🥇';
+                else if (index === 1) rankDisplay = '🥈';
+                else if (index === 2) rankDisplay = '🥉';
+
+                html += '<tr>';
+                html += '<td style="font-size: 1.2rem;">' + rankDisplay + '</td>';
+                html += '<td><strong>' + p + '</strong></td>';
+                html += '<td>' + stats.games + '</td>';
+                html += '<td style="color: #34a853;">' + stats.wins + '</td>';
+                html += '<td style="color: #ea4335;">' + stats.losses + '</td>';
+                html += '<td>' + winPct + '%</td>';
+                html += '<td class="' + earningsClass + '">$' + stats.totalEarnings.toFixed(1) + '</td>';
+                html += '<td>$' + avgPerGame + '</td>';
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('player-stats-results').innerHTML = html;
+            document.getElementById('results-card').style.display = 'block';
+            
+            toast('Stats loaded successfully!');
+        })
+        .catch(function(error) {
+            toast('Error loading stats: ' + error.message);
+        });
+};
+
+// Auto-load stats on page load
+document.getElementById('btn-load-stats').click();
+    </script>
+</body>
+</html>
