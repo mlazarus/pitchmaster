@@ -408,7 +408,9 @@ load();
 
 document.getElementById('btn-add-score').onclick = function() {
     if (g.dealers.length === 0) {
-        toast('Select dealers first');
+        if (confirm('Dealers not set! Would you like to select dealers now?')) {
+            document.getElementById('btn-dealers').click();
+        }
         return;
     }
     document.getElementById('score-a-modal').value = '';
@@ -416,7 +418,7 @@ document.getElementById('btn-add-score').onclick = function() {
     document.getElementById('score-modal').classList.add('show');
     document.getElementById('score-a-modal').focus();
 };
-
+        
 document.getElementById('btn-confirm-score').onclick = function() {
     var sA = parseFloat(document.getElementById('score-a-modal').value);
     var sB = parseFloat(document.getElementById('score-b-modal').value);
