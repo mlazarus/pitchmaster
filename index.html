@@ -25,6 +25,9 @@
         .score-display { font-size: 3rem; font-weight: 700; color: #34a853; }
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
         th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #dadce0; }
+#hands-table td { padding: 0.4rem 0.5rem; }
+#hands-table th { padding: 0.4rem 0.5rem; }
+        
         th { background: #f8f9fa; font-weight: 600; }
         .toast { position: fixed; bottom: 2rem; right: 2rem; background: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; }
         .toast.show { display: block; }
@@ -80,8 +83,10 @@
                 <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-top: 2rem;">
     <div>
         <h3>Hands</h3>
-        <table style="width: 100%;"><thead><tr><th style="width: 50%;">Dealer</th><th style="width: 25%;">A</th><th style="width: 25%;">B</th></tr></thead><tbody id="hands-table"><tr><td colspan="3">No hands yet</td></tr></tbody></table>
-    </div>
+        <tabble style="width: 100%;"><thead><tr><th style="width: 50%; padding: 0.5rem;">Dealer</th><th style="width: 25%; padding: 0.5rem;">A</th><th style="width: 25%; padding: 0.5rem;">B</th></tr></thead><tbody id="hands-table"><tr><td colspan="3" style="padding: 0.5rem;">No hands yet</td></tr></tbody></table>
+
+            
+            </div>
     <div>
         <div id="total-summary">
             <h3>Total Summary</h3>
