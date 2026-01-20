@@ -291,8 +291,8 @@ function updateUI() {
     document.getElementById('players-a').textContent = g.teamA.join(', ') || 'No players';
     document.getElementById('players-b').textContent = g.teamB.join(', ') || 'No players';
     var totA = 0, totB = 0; g.hands.forEach(function(h) { totA += h.scoreA; totB += h.scoreB; });
-    document.getElementById('total-a').textContent = totA.toFixed(1);
-    document.getElementById('total-b').textContent = totB.toFixed(1);
+    document.getElementById('total-a').textContent = totA.toFixed(0);
+    document.getElementById('total-b').textContent = totB.toFixed(0);
     var tb = document.getElementById('hands-table');
     if (g.hands.length === 0) { tb.innerHTML = '<tr><td colspan="3">No hands yet</td></tr>'; }
     else { var rA = 0, rB = 0; tb.innerHTML = g.hands.map(function(h) { rA += h.scoreA; rB += h.scoreB; return '<tr><td>' + h.dealer + '</td><td>' + rA.toFixed(1) + '</td><td>' + rB.toFixed(1) + '</td></tr>'; }).join(''); }
