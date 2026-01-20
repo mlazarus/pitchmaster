@@ -77,11 +77,22 @@
                     <div><h4>Team A</h4><div class="score-display" id="total-a">0</div><div id="players-a">No players</div></div>
                     <div><h4>Team B</h4><div class="score-display" id="total-b" style="color: #f57c00;">0</div><div id="players-b">No players</div></div>
                 </div>
-                <table><thead><tr><th>Dealer</th><th>A</th><th>B</th></tr></thead><tbody id="hands-table"><tr><td colspan="3">No hands yet</td></tr></tbody></table>
-                <div id="total-summary" style="display: none; margin-top: 2rem;">
-                    <h3>Total Summary</h3>
-                    <table><thead><tr><th>Team</th><th>Players</th><th>1</th><th>2</th><th>3</th><th>Total</th></tr></thead><tbody id="summary-body"></tbody></table>
-                </div>
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-top: 2rem;">
+    <div>
+        <h3>Hands</h3>
+        <table style="width: 100%;"><thead><tr><th style="width: 50%;">Dealer</th><th style="width: 25%;">A</th><th style="width: 25%;">B</th></tr></thead><tbody id="hands-table"><tr><td colspan="3">No hands yet</td></tr></tbody></table>
+    </div>
+    <div>
+        <div id="total-summary">
+            <h3>Total Summary</h3>
+            <table><thead><tr><th>Team</th><th>Players</th><th>Game 1</th><th>Game 2</th><th>Game 3</th><th>Total</th></tr></thead><tbody id="summary-body"><tr><td>A</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr><tr><td>B</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr></tbody></table>
+        </div>
+        <div style="margin-top: 2rem;">
+            <h3>Sets</h3>
+            <table><thead><tr id="sets-header"><th>Set #</th></tr></thead><tbody id="sets-body"><tr><td colspan="10">No sets yet</td></tr></tbody></table>
+        </div>
+    </div>
+</div>
             </div>
         </div>
         <div id="content-players" class="tab-content">
