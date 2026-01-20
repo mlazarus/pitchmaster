@@ -95,7 +95,7 @@ function toast(m) {
 var today = new Date();
 var thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
 document.getElementById('stat-end-date').valueAsDate = today;
-document.getElementById('stat-start-date').valueAsDate = thirtyDaysAgo;
+document.getElementById('stat-start-date').valueAsDate = new Date(today.getFullYear(), 0, 1);
 
 document.getElementById('btn-load-stats').onclick = function() {
     var startDate = document.getElementById('stat-start-date').value;
