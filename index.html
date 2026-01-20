@@ -323,8 +323,8 @@ function updateUI() {
 if (g.currentSetGames.length > 0) {
     var sA = ['', '', ''], sB = ['', '', ''], tA = 0, tB = 0;
     g.currentSetGames.forEach(function(game, i) {
-        sA[i] = game.scoreA.toFixed(1);
-        sB[i] = game.scoreB.toFixed(1);
+        sA[i] = game.scoreA.toFixed(0);
+        sB[i] = game.scoreB.toFixed(0);
         tA += game.scoreA;
         tB += game.scoreB;
     });
