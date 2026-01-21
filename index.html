@@ -23,8 +23,8 @@
         .team-a { background: #e8f5e9; color: #34a853; }
         .team-b { background: #fff3e0; color: #f57c00; }
         .score-display { font-size: 3rem; font-weight: 700; color: #34a853; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #dadce0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; border: 1px solid #dadce0; }
+        th, td { padding: 0.75rem; text-align: left; border: 1px solid #dadce0; }
         th { background: #f8f9fa; font-weight: 600; }
         .toast { position: fixed; bottom: 2rem; right: 2rem; background: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; }
         .toast.show { display: block; }
@@ -288,8 +288,99 @@ function updateUI() {
     var th = 0; g.completedGames.forEach(function(game) { th += game.handsPlayed || 0; }); document.getElementById('stat-hands').textContent = th;
     if (g.currentSetGames.length > 0) { document.getElementById('total-summary').style.display = 'block'; var sA = ['', '', ''], sB = ['', '', ''], tA = 0, tB = 0; g.currentSetGames.forEach(function(game, i) { sA[i] = game.scoreA.toFixed(1); sB[i] = game.scoreB.toFixed(1); tA += game.scoreA; tB += game.scoreB; }); document.getElementById('summary-body').innerHTML = '<tr><td>A</td><td>' + g.teamA.join(', ') + '</td><td>' + sA[0] + '</td><td>' + sA[1] + '</td><td>' + sA[2] + '</td><td><strong>' + tA.toFixed(1) + '</strong></td></tr><tr><td>B</td><td>' + g.teamB.join(', ') + '</td><td>' + sB[0] + '</td><td>' + sB[1] + '</td><td>' + sB[2] + '</td><td><strong>' + tB.toFixed(1) + '</strong></td></tr>'; }
     if (g.setHistory.length > 0) { document.getElementById('set-history-body').innerHTML = g.setHistory.map(function(s, i) { var w = s.teamAScore > s.teamBScore ? 'Team A' : 'Team B'; return '<tr><td>' + (i + 1) + '</td><td>' + s.teamA.join(', ') + '</td><td>' + s.teamB.join(', ') + '</td><td>' + s.teamAScore.toFixed(1) + '</td><td>' + s.teamBScore.toFixed(1) + '</td><td><strong>' + w + '</strong></td></tr>'; }).join(''); }
+
+if (g.currentSetGames.length > 0) {
+    var sA = ['', '', ''], sB = ['', '', ''], tA = 0, tB = 0;
+    g.currentSetGames.forEach(function(game, i) {
+        sA[i] = game.scoreA.toFixed(1);
+        sB[i] = game.scoreB.toFixed(1);
+        tA += game.scoreA;
+        tB += game.scoreB;
+    });
+    document.getElementById('summary-body').innerHTML = 
+        '<tr><td>A</td><td>' + g.teamA.join(', ') + '</td><td>' + (sA[0] || '-') + '</td><td>' + (sA[1] || '-') + '</td><td>' + (sA[2] || '-') + '</td><td><strong>' + tA.toFixed(1) + '</strong></td></tr>' +
+        '<tr><td>B</td><td>' + g.teamB.join(', ') + '</td><td>' + (sB[0] || '-') + '</td><td>' + (sB[1] || '-') + '</td><td>' + (sB[2] || '-') + '</td><td><strong>' + tB.toFixed(1) + '</strong></td></tr>';
+} else {
+    document.getElementById('summary-body').innerHTML = 
+        '<tr><td>A</td><td>' + (g.teamA.join(', ') || '-') + '</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>' +
+        '<tr><td>B</td><td>' + (g.teamB.join(', ') || '-') + '</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>';
 }
 
+// Update Sets table
+updateSetsTable();
+
+
+}
+
+function updateSetsTable() {
+    if (g.setHistory.length === 0) {
+        document.getElementById('sets-body').innerHTML = '<tr><td colspan="10">No sets yet</td></tr>';
+        return;
+    }
+    
+    // Get all unique players
+    var allPlayers = [];
+    g.setHistory.forEach(function(set) {
+        set.teamA.forEach(function(p) {
+            if (!allPlayers.includes(p)) allPlayers.push(p);
+        });
+        set.teamB.forEach(function(p) {
+            if (!allPlayers.includes(p)) allPlayers.push(p);
+        });
+    });
+    
+    // Build header
+    var headerHtml = '<tr><th>Set #</th>';
+    allPlayers.forEach(function(p) {
+        headerHtml += '<th>' + p + '</th>';
+    });
+    headerHtml += '</tr>';
+    document.getElementById('sets-header').innerHTML = headerHtml;
+    
+    // Build rows
+    var bodyHtml = '';
+    var playerTotals = {};
+    allPlayers.forEach(function(p) { playerTotals[p] = 0; });
+    
+    g.setHistory.forEach(function(set, idx) {
+        bodyHtml += '<tr><td>' + (g.setHistory.length - idx) + '</td>';
+        
+        var teamACount = set.teamA.length;
+        var teamBCount = set.teamB.length;
+        var captainA = teamACount < teamBCount ? 1.5 : 1;
+        var captainB = teamBCount < teamACount ? 1.5 : 1;
+        
+        allPlayers.forEach(function(p) {
+            var score = 0;
+            if (set.teamA.includes(p)) {
+                score = set.teamAScore * captainA;
+            } else if (set.teamB.includes(p)) {
+                score = set.teamBScore * captainB;
+            }
+            
+            if (score !== 0) {
+                playerTotals[p] += score;
+                var color = score >= 0 ? '#34a853' : '#ea4335';
+                bodyHtml += '<td style="color: ' + color + '; font-weight: 600;">$' + score.toFixed(1) + '</td>';
+            } else {
+                bodyHtml += '<td>-</td>';
+            }
+        });
+        bodyHtml += '</tr>';
+    });
+    
+    // Add totals row
+    bodyHtml += '<tr style="background: #f8f9fa; font-weight: 700;"><td>Total</td>';
+    allPlayers.forEach(function(p) {
+        var total = playerTotals[p];
+        var color = total >= 0 ? '#34a853' : '#ea4335';
+        bodyHtml += '<td style="color: ' + color + ';">$' + total.toFixed(1) + '</td>';
+    });
+    bodyHtml += '</tr>';
+    
+    document.getElementById('sets-body').innerHTML = bodyHtml;
+}
+        
 function toggleTeam(p) { var inA = g.teamA.includes(p), inB = g.teamB.includes(p); if (!inA && !inB) { if (g.teamA.length >= 3) { toast('Team A full'); return; } g.teamA.push(p); toast(p + ' → A'); } else if (inA) { if (g.teamB.length >= 3) { toast('Team B full'); return; } g.teamA = g.teamA.filter(function(x) { return x !== p; }); g.teamB.push(p); toast(p + ' → B'); } else { g.teamB = g.teamB.filter(function(x) { return x !== p; }); toast(p + ' removed'); } if (g.currentGameId) sb.from('games').update({ team_a_players: g.teamA, team_b_players: g.teamB }).eq('id', g.currentGameId).then(function() {}); updateUI(); }
 
 document.getElementById('btn-add-player').onclick = function() { 
