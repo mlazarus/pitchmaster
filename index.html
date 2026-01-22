@@ -542,14 +542,27 @@ document.getElementById('btn-add-score').onclick = function() {
     document.getElementById('score-modal').classList.add('show');
     document.getElementById('score-a-modal').focus();
 };
-        
+
 document.getElementById('btn-confirm-score').onclick = function() {
-    var sA = parseFloat(document.getElementById('score-a-modal').value);
-    var sB = parseFloat(document.getElementById('score-b-modal').value);
+    var sA = document.getElementById('score-a-modal').value.trim();
+    var sB = document.getElementById('score-b-modal').value.trim();
+    
+    // Both blank is not allowed
+    if (sA === '' && sB === '') {
+        toast('At least one team must have a score');
+        return;
+    }
+    
+    // Treat blank as 0
+    sA = sA === '' ? 0 : parseFloat(sA);
+    sB = sB === '' ? 0 : parseFloat(sB);
+    
+    // Check if valid numbers
     if (isNaN(sA) || isNaN(sB)) {
         toast('Enter valid scores');
         return;
     }
+    
     var d = g.dealers[g.hands.length % g.dealers.length];
     sb.from('hands').insert({
         game_id: g.currentGameId,
@@ -564,6 +577,7 @@ document.getElementById('btn-confirm-score').onclick = function() {
         toast('Score added!');
     });
 };
+        
 
 document.getElementById('btn-cancel-score').onclick = function() {
     document.getElementById('score-modal').classList.remove('show');
