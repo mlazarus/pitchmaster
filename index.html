@@ -111,9 +111,22 @@
             <table><thead><tr><th>Team</th><th>Players</th><th>Game 1</th><th>Game 2</th><th>Game 3</th><th>Total</th></tr></thead><tbody id="summary-body"><tr><td>A</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr><tr><td>B</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr></tbody></table>
         </div>
         <div style="margin-top: 2rem;">
-            <h3>Sets</h3>
-            <table><thead><tr id="sets-header"><th>Set #</th></tr></thead><tbody id="sets-body"><tr><td colspan="10">No sets yet</td></tr></tbody></table>
+    <h3>Sets</h3>
+    <div style="overflow-x: auto;">
+        <table style="display: table;">
+            <thead id="sets-header" style="display: table-header-group;">
+                <tr><th>Set #</th></tr>
+            </thead>
+        </table>
+        <div style="max-height: 300px; overflow-y: auto; display: block;">
+            <table style="width: 100%;">
+                <tbody id="sets-body" style="display: table-row-group;">
+                    <tr><td colspan="10">No sets yet</td></tr>
+                </tbody>
+            </table>
         </div>
+    </div>
+</div>
     </div>
 </div>
             </div>
@@ -382,12 +395,12 @@ function updateSetsTable() {
     });
     
     // Build header
-    var headerHtml = '<tr><th>Set #</th>';
-    allPlayers.forEach(function(p) {
-        headerHtml += '<th>' + p + '</th>';
-    });
-    headerHtml += '</tr>';
-    document.getElementById('sets-header').innerHTML = headerHtml;
+var headerHtml = '<tr><th>Set #</th>';
+allPlayers.forEach(function(p) {
+    headerHtml += '<th style="width: 100px;">' + p + '</th>';
+});
+headerHtml += '</tr>';
+document.getElementById('sets-header').innerHTML = headerHtml;
     
     // Build rows
     var bodyHtml = '';
