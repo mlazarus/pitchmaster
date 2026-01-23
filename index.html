@@ -111,27 +111,26 @@
             <table><thead><tr><th>Team</th><th>Players</th><th>Game 1</th><th>Game 2</th><th>Game 3</th><th>Total</th></tr></thead><tbody id="summary-body"><tr><td>A</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr><tr><td>B</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr></tbody></table>
         </div>
 
-<div style="margin-top: 2rem;">
+     <div style="margin-top: 2rem;">
     <h3>Sets</h3>
-    <div style="overflow-x: auto;">
-        <table style="table-layout: fixed; width: 100%;">
-            <thead id="sets-header">
-                <tr><th style="width: 80px;">Set #</th></tr>
-            </thead>
-            <tbody id="sets-totals">
-                <tr><td colspan="10">No sets yet</td></tr>
-            </tbody>
-        </table>
-        <div style="max-height: 300px; overflow-y: auto; border-top: 2px solid #dadce0;">
-            <table style="table-layout: fixed; width: 100%;">
+    <div style="overflow-x: auto; border: 1px solid #dadce0; border-radius: 8px;">
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table style="width: 100%;">
+                <thead id="sets-header" style="position: sticky; top: 0; background: white; z-index: 10;">
+                    <tr><th>Set #</th></tr>
+                </thead>
+                <tbody>
+                    <tr id="sets-totals-row" style="position: sticky; top: 49px; background: #f8f9fa; font-weight: 700; z-index: 9;">
+                        <td colspan="10">No sets yet</td>
+                    </tr>
+                </tbody>
                 <tbody id="sets-body">
                     <tr><td colspan="10"></td></tr>
                 </tbody>
             </table>
         </div>
     </div>
-</div>
-        
+</div>   
 
         
     </div>
@@ -382,11 +381,10 @@ updateSetsTable();
 
 
 }
-
 function updateSetsTable() {
     if (g.setHistory.length === 0) {
         document.getElementById('sets-header').innerHTML = '<tr><th>Set #</th></tr>';
-        document.getElementById('sets-totals').innerHTML = '<tr><td colspan="10">No sets yet</td></tr>';
+        document.getElementById('sets-totals-row').innerHTML = '<td colspan="10">No sets yet</td>';
         document.getElementById('sets-body').innerHTML = '';
         return;
     }
@@ -403,12 +401,12 @@ function updateSetsTable() {
     });
     
     // Build header
-var headerHtml = '<tr><th style="width: 80px;">Set #</th>';
-allPlayers.forEach(function(p) {
-    headerHtml += '<th style="width: 120px;">' + p + '</th>';
-});
-headerHtml += '</tr>';
-document.getElementById('sets-header').innerHTML = headerHtml;
+    var headerHtml = '<tr><th>Set #</th>';
+    allPlayers.forEach(function(p) {
+        headerHtml += '<th>' + p + '</th>';
+    });
+    headerHtml += '</tr>';
+    document.getElementById('sets-header').innerHTML = headerHtml;
     
     // Calculate totals
     var playerTotals = {};
@@ -433,49 +431,46 @@ document.getElementById('sets-header').innerHTML = headerHtml;
             }
         });
     });
-
-// Build totals row
-var totalsHtml = '<tr style="background: #f8f9fa; font-weight: 700;"><td style="width: 80px;">Total</td>';
-allPlayers.forEach(function(p) {
-    var total = playerTotals[p];
-    var color = total >= 0 ? '#34a853' : '#ea4335';
-    totalsHtml += '<td style="width: 120px; color: ' + color + ';">$' + total.toFixed(1) + '</td>';
-});
-
-     totalsHtml += '</tr>';
-document.getElementById('sets-total').innerHTML = totalsHtml;
     
-// Build individual set rows (these will scroll)
-var bodyHtml = '';
-g.setHistory.forEach(function(set, idx) {
-    bodyHtml += '<tr><td style="width: 80px;">' + (g.setHistory.length - idx) + '</td>';
-    
-    var teamACount = set.teamA.length;
-    var teamBCount = set.teamB.length;
-    var captainA = teamACount < teamBCount ? 1.5 : 1;
-    var captainB = teamBCount < teamACount ? 1.5 : 1;
-    
+    // Build totals row
+    var totalsHtml = '<td>Total</td>';
     allPlayers.forEach(function(p) {
-        var score = 0;
-        if (set.teamA.includes(p)) {
-            score = set.teamAScore * captainA;
-        } else if (set.teamB.includes(p)) {
-            score = set.teamBScore * captainB;
-        }
-        
-        if (score !== 0) {
-            bodyHtml += '<td style="width: 120px; color: #1a73e8; font-weight: 600;">$' + score.toFixed(1) + '</td>';
-        } else {
-            bodyHtml += '<td style="width: 120px;">-</td>';
-        }
+        var total = playerTotals[p];
+        var color = total >= 0 ? '#34a853' : '#ea4335';
+        totalsHtml += '<td style="color: ' + color + ';">$' + total.toFixed(1) + '</td>';
     });
-    bodyHtml += '</tr>';
-});
+    document.getElementById('sets-totals-row').innerHTML = totalsHtml;
     
-  
+    // Build individual set rows (these will scroll)
+    var bodyHtml = '';
+    g.setHistory.forEach(function(set, idx) {
+        bodyHtml += '<tr><td>' + (g.setHistory.length - idx) + '</td>';
+        
+        var teamACount = set.teamA.length;
+        var teamBCount = set.teamB.length;
+        var captainA = teamACount < teamBCount ? 1.5 : 1;
+        var captainB = teamBCount < teamACount ? 1.5 : 1;
+        
+        allPlayers.forEach(function(p) {
+            var score = 0;
+            if (set.teamA.includes(p)) {
+                score = set.teamAScore * captainA;
+            } else if (set.teamB.includes(p)) {
+                score = set.teamBScore * captainB;
+            }
+            
+            if (score !== 0) {
+                bodyHtml += '<td style="color: #1a73e8; font-weight: 600;">$' + score.toFixed(1) + '</td>';
+            } else {
+                bodyHtml += '<td>-</td>';
+            }
+        });
+        bodyHtml += '</tr>';
+    });
     
     document.getElementById('sets-body').innerHTML = bodyHtml;
 }
+        
         
         
 function toggleTeam(p) { var inA = g.teamA.includes(p), inB = g.teamB.includes(p); if (!inA && !inB) { if (g.teamA.length >= 3) { toast('Team A full'); return; } g.teamA.push(p); toast(p + ' → A'); } else if (inA) { if (g.teamB.length >= 3) { toast('Team B full'); return; } g.teamA = g.teamA.filter(function(x) { return x !== p; }); g.teamB.push(p); toast(p + ' → B'); } else { g.teamB = g.teamB.filter(function(x) { return x !== p; }); toast(p + ' removed'); } if (g.currentGameId) sb.from('games').update({ team_a_players: g.teamA, team_b_players: g.teamB }).eq('id', g.currentGameId).then(function() {}); updateUI(); }
