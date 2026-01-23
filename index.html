@@ -110,19 +110,20 @@
             <h3>Total Summary</h3>
             <table><thead><tr><th>Team</th><th>Players</th><th>Game 1</th><th>Game 2</th><th>Game 3</th><th>Total</th></tr></thead><tbody id="summary-body"><tr><td>A</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr><tr><td>B</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr></tbody></table>
         </div>
-        <div style="margin-top: 2rem;">
+
+<div style="margin-top: 2rem;">
     <h3>Sets</h3>
     <div style="overflow-x: auto;">
-        <table>
+        <table style="table-layout: fixed; width: 100%;">
             <thead id="sets-header">
-                <tr><th>Set #</th></tr>
+                <tr><th style="width: 80px;">Set #</th></tr>
             </thead>
             <tbody id="sets-totals">
                 <tr><td colspan="10">No sets yet</td></tr>
             </tbody>
         </table>
         <div style="max-height: 300px; overflow-y: auto; border-top: 2px solid #dadce0;">
-            <table>
+            <table style="table-layout: fixed; width: 100%;">
                 <tbody id="sets-body">
                     <tr><td colspan="10"></td></tr>
                 </tbody>
@@ -130,6 +131,9 @@
         </div>
     </div>
 </div>
+        
+
+        
     </div>
 </div>
             </div>
@@ -399,12 +403,12 @@ function updateSetsTable() {
     });
     
     // Build header
-    var headerHtml = '<tr><th>Set #</th>';
-    allPlayers.forEach(function(p) {
-        headerHtml += '<th>' + p + '</th>';
-    });
-    headerHtml += '</tr>';
-    document.getElementById('sets-header').innerHTML = headerHtml;
+var headerHtml = '<tr><th style="width: 80px;">Set #</th>';
+allPlayers.forEach(function(p) {
+    headerHtml += '<th style="width: 120px;">' + p + '</th>';
+});
+headerHtml += '</tr>';
+document.getElementById('sets-header').innerHTML = headerHtml;
     
     // Calculate totals
     var playerTotals = {};
@@ -429,43 +433,43 @@ function updateSetsTable() {
             }
         });
     });
+
+// Build totals row
+var totalsHtml = '<tr style="background: #f8f9fa; font-weight: 700;"><td style="width: 80px;">Total</td>';
+allPlayers.forEach(function(p) {
+    var total = playerTotals[p];
+    var color = total >= 0 ? '#34a853' : '#ea4335';
+    totalsHtml += '<td style="width: 120px; color: ' + color + ';">$' + total.toFixed(1) + '</td>';
+});
+
+// Build individual set rows (these will scroll)
+var bodyHtml = '';
+g.setHistory.forEach(function(set, idx) {
+    bodyHtml += '<tr><td style="width: 80px;">' + (g.setHistory.length - idx) + '</td>';
     
-    // Build totals row
-    var totalsHtml = '<tr style="background: #f8f9fa; font-weight: 700;"><td>Total</td>';
+    var teamACount = set.teamA.length;
+    var teamBCount = set.teamB.length;
+    var captainA = teamACount < teamBCount ? 1.5 : 1;
+    var captainB = teamBCount < teamACount ? 1.5 : 1;
+    
     allPlayers.forEach(function(p) {
-        var total = playerTotals[p];
-        var color = total >= 0 ? '#34a853' : '#ea4335';
-        totalsHtml += '<td style="color: ' + color + ';">$' + total.toFixed(1) + '</td>';
+        var score = 0;
+        if (set.teamA.includes(p)) {
+            score = set.teamAScore * captainA;
+        } else if (set.teamB.includes(p)) {
+            score = set.teamBScore * captainB;
+        }
+        
+        if (score !== 0) {
+            bodyHtml += '<td style="width: 120px; color: #1a73e8; font-weight: 600;">$' + score.toFixed(1) + '</td>';
+        } else {
+            bodyHtml += '<td style="width: 120px;">-</td>';
+        }
     });
-    totalsHtml += '</tr>';
-    document.getElementById('sets-totals').innerHTML = totalsHtml;
+    bodyHtml += '</tr>';
+});
     
-    // Build individual set rows (these will scroll)
-    var bodyHtml = '';
-    g.setHistory.forEach(function(set, idx) {
-        bodyHtml += '<tr><td>' + (g.setHistory.length - idx) + '</td>';
-        
-        var teamACount = set.teamA.length;
-        var teamBCount = set.teamB.length;
-        var captainA = teamACount < teamBCount ? 1.5 : 1;
-        var captainB = teamBCount < teamACount ? 1.5 : 1;
-        
-        allPlayers.forEach(function(p) {
-            var score = 0;
-            if (set.teamA.includes(p)) {
-                score = set.teamAScore * captainA;
-            } else if (set.teamB.includes(p)) {
-                score = set.teamBScore * captainB;
-            }
-            
-            if (score !== 0) {
-                bodyHtml += '<td style="color: #1a73e8; font-weight: 600;">$' + score.toFixed(1) + '</td>';
-            } else {
-                bodyHtml += '<td>-</td>';
-            }
-        });
-        bodyHtml += '</tr>';
-    });
+  
     
     document.getElementById('sets-body').innerHTML = bodyHtml;
 }
