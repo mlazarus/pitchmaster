@@ -441,7 +441,8 @@ allPlayers.forEach(function(p) {
     var color = total >= 0 ? '#34a853' : '#ea4335';
     totalsHtml += '<td style="width: 120px; color: ' + color + ';">$' + total.toFixed(1) + '</td>';
 });
-
+document.getElementById('sets-total').innerHTML = totalsHtml;
+    
 // Build individual set rows (these will scroll)
 var bodyHtml = '';
 g.setHistory.forEach(function(set, idx) {
