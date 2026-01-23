@@ -113,15 +113,18 @@
         <div style="margin-top: 2rem;">
     <h3>Sets</h3>
     <div style="overflow-x: auto;">
-        <table style="display: table;">
-            <thead id="sets-header" style="display: table-header-group;">
+        <table>
+            <thead id="sets-header">
                 <tr><th>Set #</th></tr>
             </thead>
+            <tbody id="sets-totals">
+                <tr><td colspan="10">No sets yet</td></tr>
+            </tbody>
         </table>
-        <div style="max-height: 300px; overflow-y: auto; display: block;">
-            <table style="width: 100%;">
-                <tbody id="sets-body" style="display: table-row-group;">
-                    <tr><td colspan="10">No sets yet</td></tr>
+        <div style="max-height: 300px; overflow-y: auto; border-top: 2px solid #dadce0;">
+            <table>
+                <tbody id="sets-body">
+                    <tr><td colspan="10"></td></tr>
                 </tbody>
             </table>
         </div>
@@ -376,10 +379,11 @@ updateSetsTable();
 
 }
 
-
 function updateSetsTable() {
     if (g.setHistory.length === 0) {
-        document.getElementById('sets-body').innerHTML = '<tr><td colspan="10">No sets yet</td></tr>';
+        document.getElementById('sets-header').innerHTML = '<tr><th>Set #</th></tr>';
+        document.getElementById('sets-totals').innerHTML = '<tr><td colspan="10">No sets yet</td></tr>';
+        document.getElementById('sets-body').innerHTML = '';
         return;
     }
     
@@ -395,19 +399,18 @@ function updateSetsTable() {
     });
     
     // Build header
-var headerHtml = '<tr><th>Set #</th>';
-allPlayers.forEach(function(p) {
-    headerHtml += '<th style="width: 100px;">' + p + '</th>';
-});
-headerHtml += '</tr>';
-document.getElementById('sets-header').innerHTML = headerHtml;
+    var headerHtml = '<tr><th>Set #</th>';
+    allPlayers.forEach(function(p) {
+        headerHtml += '<th>' + p + '</th>';
+    });
+    headerHtml += '</tr>';
+    document.getElementById('sets-header').innerHTML = headerHtml;
     
-    // Build rows
-    var bodyHtml = '';
+    // Calculate totals
     var playerTotals = {};
     allPlayers.forEach(function(p) { playerTotals[p] = 0; });
     
-    g.setHistory.forEach(function(set, idx) {
+    g.setHistory.forEach(function(set) {
         var teamACount = set.teamA.length;
         var teamBCount = set.teamB.length;
         var captainA = teamACount < teamBCount ? 1.5 : 1;
@@ -427,16 +430,18 @@ document.getElementById('sets-header').innerHTML = headerHtml;
         });
     });
     
-    // Add totals row FIRST
-    bodyHtml += '<tr style="background: #f8f9fa; font-weight: 700;"><td>Total</td>';
+    // Build totals row
+    var totalsHtml = '<tr style="background: #f8f9fa; font-weight: 700;"><td>Total</td>';
     allPlayers.forEach(function(p) {
         var total = playerTotals[p];
         var color = total >= 0 ? '#34a853' : '#ea4335';
-        bodyHtml += '<td style="color: ' + color + ';">$' + total.toFixed(1) + '</td>';
+        totalsHtml += '<td style="color: ' + color + ';">$' + total.toFixed(1) + '</td>';
     });
-    bodyHtml += '</tr>';
+    totalsHtml += '</tr>';
+    document.getElementById('sets-totals').innerHTML = totalsHtml;
     
-    // Then add individual set rows
+    // Build individual set rows (these will scroll)
+    var bodyHtml = '';
     g.setHistory.forEach(function(set, idx) {
         bodyHtml += '<tr><td>' + (g.setHistory.length - idx) + '</td>';
         
