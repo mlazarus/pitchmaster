@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pitch Game Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8f9fa; color: #202124; }
@@ -37,59 +38,9 @@
         .dealer-select-item:hover { background: #e8f5e9; }
         .dealer-select-item.selected { background: #1a73e8; color: white; font-weight: 600; }
         .dealer-order-badge { background: white; color: #1a73e8; padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: 700; font-size: 0.875rem; }
-    #sets-body {
-    display: block;
-    max-height: 400px;
-    overflow-y: auto;
-#sets-header-row th,
-#sets-totals-row th {
-    background: #f8f9fa;
-    font-weight: 700;
-    padding: 0.5rem;
-    border: 1px solid #dadce0;
-}
+</style>
 
-#sets-totals-row th {
-    background: #eef3fd;
-}
-
-#sets-body td {
-    padding: 0.5rem;
-    border: 1px solid #dadce0;
-    text-align: center;
-}
-        
-        
-}
-
-#sets-header-row th,
-#sets-totals-row th,
-#sets-body td {
-    padding: 0.75rem;
-    text-align: center;
-    min-width: 100px;
-}
-
-#sets-header-row th:first-child,
-#sets-totals-row th:first-child,
-#sets-body td:first-child {
-    min-width: 80px;
-}
-        
-#sets-header {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
-}
-
-#sets-body tr {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
-}
     
-    
-    </style>
 </head>
 <body>
     <div class="header">
@@ -149,6 +100,9 @@
     <div style="border: 1px solid #dadce0; border-radius: 8px; overflow: hidden;">
         <div style="max-height: 400px; overflow-y: auto;">
             <table style="width: 100%; table-layout: fixed;">
+                <colgroup>
+                    <col style="width: 80px;">
+                </colgroup>
                 <thead style="position: sticky; top: 0; z-index: 10;">
                     <tr id="sets-header-row" style="background: #f8f9fa;">
                         <th>Set #</th>
@@ -456,12 +410,29 @@ function updateSetsTable() {
         });
     });
     
-    // Build header
-    var headerHtml = '<th>Set #</th>';
-    allPlayers.forEach(function(p) {
-        headerHtml += '<th>' + p + '</th>';
-    });
-    headerRow.innerHTML = headerHtml;
+  
+
+// Build header
+var headerHtml = '<th>Set #</th>';
+var colgroupHtml = '<col style="width: 80px;">';
+allPlayers.forEach(function(p) {
+    headerHtml += '<th>' + p + '</th>';
+    colgroupHtml += '<col style="width: 120px;">';
+});
+
+// Add colgroup to table
+var table = document.querySelector('#sets-header-row').closest('table');
+var existingColgroup = table.querySelector('colgroup');
+if (existingColgroup) {
+    existingColgroup.innerHTML = colgroupHtml;
+} else {
+    var colgroup = document.createElement('colgroup');
+    colgroup.innerHTML = colgroupHtml;
+    table.insertBefore(colgroup, table.firstChild);
+}
+
+headerRow.innerHTML = headerHtml;
+
     
     // Build totals row
     var totalsHtml = '<th>Total</th>';
