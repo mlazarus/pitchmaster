@@ -133,15 +133,18 @@
 <div style="margin-top: 2rem;">
     <h3>Sets</h3>
     <div style="border: 1px solid #dadce0; border-radius: 8px; overflow: hidden;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr id="sets-header-row"></tr>
-                <tr id="sets-totals-row"></tr>
-            </thead>
-        </table>
         <div style="max-height: 400px; overflow-y: auto;">
-            <table style="width: 100%; border-collapse: collapse;">
-                <tbody id="sets-body"></tbody>
+            <table style="width: 100%;">
+                <thead style="position: sticky; top: 0; z-index: 10;">
+                    <tr id="sets-header-row" style="background: #f8f9fa;">
+                        <th>Set #</th>
+                    </tr>
+                    <tr id="sets-totals-row" style="background: #f8f9fa; font-weight: 700; position: sticky; top: 49px; z-index: 9;">
+                        <td colspan="10">No sets yet</td>
+                    </tr>
+                </thead>
+                <tbody id="sets-body">
+                </tbody>
             </table>
         </div>
     </div>
@@ -418,34 +421,21 @@ function updateSetsTable() {
         });
     });
 
-    // ---- HEADER ROW (Players) ----
-    var headerHtml = '<th>Set #</th>';
-    players.forEach(function(p) {
-        headerHtml += '<th>' + p + '</th>';
-    });
-    headerRow.innerHTML = headerHtml;
+ // Build header
+var headerHtml = '<th>Set #</th>';
+allPlayers.forEach(function(p) {
+    headerHtml += '<th>' + p + '</th>';
+});
+document.getElementById('sets-header-row').innerHTML = headerHtml;
 
-    // ---- TOTALS ROW ----
-    var totals = {};
-    players.forEach(function(p) { totals[p] = 0; });
-
-    g.setHistory.forEach(function(set) {
-        var aMult = set.teamA.length < set.teamB.length ? 1.5 : 1;
-        var bMult = set.teamB.length < set.teamA.length ? 1.5 : 1;
-
-        players.forEach(function(p) {
-            if (set.teamA.includes(p)) totals[p] += set.teamAScore * aMult;
-            if (set.teamB.includes(p)) totals[p] += set.teamBScore * bMult;
-        });
-    });
-
-    var totalsHtml = '<th>Total</th>';
-    players.forEach(function(p) {
-        var val = totals[p];
-        var color = val >= 0 ? '#34a853' : '#ea4335';
-        totalsHtml += '<th style="color:' + color + ';">$' + val.toFixed(1) + '</th>';
-    });
-    totalsRow.innerHTML = totalsHtml;
+// Build totals row
+var totalsHtml = '<th>Total</th>';
+allPlayers.forEach(function(p) {
+    var total = playerTotals[p];
+    var color = total >= 0 ? '#34a853' : '#ea4335';
+    totalsHtml += '<th style="color: ' + color + ';">$' + total.toFixed(1) + '</th>';
+});
+document.getElementById('sets-totals-row').innerHTML = totalsHtml;
 
     // ---- BODY ROWS (Scrollable) ----
     var bodyHtml = '';
