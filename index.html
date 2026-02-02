@@ -405,64 +405,81 @@ function updateSetsTable() {
     var headerRow = document.getElementById('sets-header-row');
     var totalsRow = document.getElementById('sets-totals-row');
     var body = document.getElementById('sets-body');
-
+    
     if (g.setHistory.length === 0) {
         headerRow.innerHTML = '<th>Set #</th>';
-        totalsRow.innerHTML = '<th>Total</th>';
-        body.innerHTML = '<tr><td>No sets yet</td></tr>';
+        totalsRow.innerHTML = '<td colspan="10">No sets yet</td>';
+        body.innerHTML = '';
         return;
     }
-
+    
     // Collect unique players
-    var players = [];
+    var allPlayers = [];
     g.setHistory.forEach(function(set) {
-        set.teamA.concat(set.teamB).forEach(function(p) {
-            if (!players.includes(p)) players.push(p);
+        set.teamA.forEach(function(p) {
+            if (!allPlayers.includes(p)) allPlayers.push(p);
+        });
+        set.teamB.forEach(function(p) {
+            if (!allPlayers.includes(p)) allPlayers.push(p);
         });
     });
-
- // Build header
-var headerHtml = '<th>Set #</th>';
-allPlayers.forEach(function(p) {
-    headerHtml += '<th>' + p + '</th>';
-});
-document.getElementById('sets-header-row').innerHTML = headerHtml;
-
-// Build totals row
-var totalsHtml = '<th>Total</th>';
-allPlayers.forEach(function(p) {
-    var total = playerTotals[p];
-    var color = total >= 0 ? '#34a853' : '#ea4335';
-    totalsHtml += '<th style="color: ' + color + ';">$' + total.toFixed(1) + '</th>';
-});
-document.getElementById('sets-totals-row').innerHTML = totalsHtml;
-
-    // ---- BODY ROWS (Scrollable) ----
+    
+    // Calculate totals
+    var playerTotals = {};
+    allPlayers.forEach(function(p) { playerTotals[p] = 0; });
+    
+    g.setHistory.forEach(function(set) {
+        var aMult = set.teamA.length < set.teamB.length ? 1.5 : 1;
+        var bMult = set.teamB.length < set.teamA.length ? 1.5 : 1;
+        
+        allPlayers.forEach(function(p) {
+            if (set.teamA.includes(p)) {
+                playerTotals[p] += set.teamAScore * aMult;
+            }
+            if (set.teamB.includes(p)) {
+                playerTotals[p] += set.teamBScore * bMult;
+            }
+        });
+    });
+    
+    // Build header
+    var headerHtml = '<th>Set #</th>';
+    allPlayers.forEach(function(p) {
+        headerHtml += '<th>' + p + '</th>';
+    });
+    headerRow.innerHTML = headerHtml;
+    
+    // Build totals row
+    var totalsHtml = '<th>Total</th>';
+    allPlayers.forEach(function(p) {
+        var total = playerTotals[p];
+        var color = total >= 0 ? '#34a853' : '#ea4335';
+        totalsHtml += '<th style="color: ' + color + ';">$' + total.toFixed(1) + '</th>';
+    });
+    totalsRow.innerHTML = totalsHtml;
+    
+    // Build body rows (Scrollable)
     var bodyHtml = '';
     g.setHistory.forEach(function(set, idx) {
         bodyHtml += '<tr><td>' + (g.setHistory.length - idx) + '</td>';
-
         var aMult = set.teamA.length < set.teamB.length ? 1.5 : 1;
         var bMult = set.teamB.length < set.teamA.length ? 1.5 : 1;
-
-        players.forEach(function(p) {
+        
+        allPlayers.forEach(function(p) {
             var val = 0;
             if (set.teamA.includes(p)) val = set.teamAScore * aMult;
             if (set.teamB.includes(p)) val = set.teamBScore * bMult;
-
-            bodyHtml += val
-                ? '<td style="color:#1a73e8;font-weight:600;">$' + val.toFixed(1) + '</td>'
-                : '<td>-</td>';
+            
+            if (val !== 0) {
+                bodyHtml += '<td style="color:#1a73e8;font-weight:600;">$' + val.toFixed(1) + '</td>';
+            } else {
+                bodyHtml += '<td>-</td>';
+            }
         });
-
         bodyHtml += '</tr>';
     });
-
     body.innerHTML = bodyHtml;
-}
-
-        
-        
+}        
         
      
         
