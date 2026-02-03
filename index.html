@@ -379,7 +379,17 @@ if (g.currentSetGames.length > 0) {
         '<tr><td>B</td><td>' + (g.teamB.join(', ') || '-') + '</td><td>-</td><td>-</td><td>-</td></tr>';
 }
 
-function editHand(index) {
+
+
+    
+// Update Sets table
+updateSetsTable();
+
+
+
+}
+
+        function editHand(index) {
     editingHandIndex = index;
 
     var h = g.hands[index];
@@ -396,14 +406,7 @@ document.querySelectorAll('#hands-table tr')[index]
     document.getElementById('score-modal').classList.add('show');
 }
 
-    
-// Update Sets table
-updateSetsTable();
-
-
-
-}
-
+        
 function updateSetsTable() {
     var headerRow = document.getElementById('sets-header-row');
     var totalsRow = document.getElementById('sets-totals-row');
