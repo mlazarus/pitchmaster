@@ -38,6 +38,10 @@
         .dealer-select-item:hover { background: #e8f5e9; }
         .dealer-select-item.selected { background: #1a73e8; color: white; font-weight: 600; }
         .dealer-order-badge { background: white; color: #1a73e8; padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: 700; font-size: 0.875rem; }
+
+        tr.editing {
+    background: #e8f0fe;
+}
 </style>
 
     
@@ -219,7 +223,8 @@ var tables = {
     3: null,
     4: null
 };
-
+var editingHandIndex = null;
+        
 function toast(m) { var t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 2000); }
 
 document.querySelectorAll('.tab').forEach(function(tab) {
@@ -320,7 +325,19 @@ function updateUI() {
     document.getElementById('total-b').textContent = totB.toFixed(0);
     var tb = document.getElementById('hands-table');
     if (g.hands.length === 0) { tb.innerHTML = '<tr><td colspan="3">No hands yet</td></tr>'; }
-    else { var rA = 0, rB = 0; tb.innerHTML = g.hands.map(function(h) { rA += h.scoreA; rB += h.scoreB; return '<tr><td>' + h.dealer + '</td><td>' + rA.toFixed(1) + '</td><td>' + rB.toFixed(1) + '</td></tr>'; }).join(''); }
+    else { var rA = 0, rB = 0; tb.innerHTML = g.hands.map(function(h, idx) {
+    rA += h.scoreA;
+    rB += h.scoreB;
+    return `
+        <tr style="cursor:pointer"
+            onclick="editHand(${idx})"
+            title="Click to edit this hand">
+            <td>${h.dealer}</td>
+            <td>${rA.toFixed(1)}</td>
+            <td>${rB.toFixed(1)}</td>
+        </tr>
+    `;
+}).join('');}
     if (g.dealers.length > 0) {
         var currentDealerIdx = g.hands.length % g.dealers.length;
         document.getElementById('current-dealer').textContent = g.dealers[currentDealerIdx];
@@ -362,6 +379,24 @@ if (g.currentSetGames.length > 0) {
         '<tr><td>B</td><td>' + (g.teamB.join(', ') || '-') + '</td><td>-</td><td>-</td><td>-</td></tr>';
 }
 
+function editHand(index) {
+    editingHandIndex = index;
+
+    var h = g.hands[index];
+
+    document.querySelectorAll('#hands-table tr')
+    .forEach(r => r.classList.remove('editing'));
+
+document.querySelectorAll('#hands-table tr')[index]
+    ?.classList.add('editing');
+    
+    document.getElementById('score-a-modal').value = h.scoreA;
+    document.getElementById('score-b-modal').value = h.scoreB;
+
+    document.getElementById('score-modal').classList.add('show');
+}
+
+    
 // Update Sets table
 updateSetsTable();
 
@@ -601,24 +636,43 @@ document.getElementById('btn-add-score').onclick = function() {
 document.getElementById('btn-confirm-score').onclick = function() {
     var sA = document.getElementById('score-a-modal').value.trim();
     var sB = document.getElementById('score-b-modal').value.trim();
-    
-    // Both blank is not allowed
+
     if (sA === '' && sB === '') {
         toast('At least one team must have a score');
         return;
     }
-    
-    // Treat blank as 0
+
     sA = sA === '' ? 0 : parseFloat(sA);
     sB = sB === '' ? 0 : parseFloat(sB);
-    
-    // Check if valid numbers
+
     if (isNaN(sA) || isNaN(sB)) {
         toast('Enter valid scores');
         return;
     }
-    
+
+    // ---- EDIT EXISTING HAND ----
+    if (editingHandIndex !== null) {
+        var hand = g.hands[editingHandIndex];
+
+        sb.from('hands')
+            .update({ score_a: sA, score_b: sB })
+            .eq('game_id', g.currentGameId)
+            .eq('hand_order', editingHandIndex)
+            .then(function() {
+                hand.scoreA = sA;
+                hand.scoreB = sB;
+                editingHandIndex = null;
+                document.getElementById('score-modal').classList.remove('show');
+                updateUI();
+                toast('Hand updated');
+            });
+
+        return;
+    }
+
+    // ---- ADD NEW HAND ----
     var d = g.dealers[g.hands.length % g.dealers.length];
+
     sb.from('hands').insert({
         game_id: g.currentGameId,
         dealer: d,
@@ -635,6 +689,7 @@ document.getElementById('btn-confirm-score').onclick = function() {
         
 
 document.getElementById('btn-cancel-score').onclick = function() {
+    editingHandIndex = null;
     document.getElementById('score-modal').classList.remove('show');
 };
         
