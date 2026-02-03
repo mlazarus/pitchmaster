@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pitch Game Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8f9fa; color: #202124; }
@@ -26,6 +27,8 @@
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; border: 1px solid #dadce0; }
         th, td { padding: 0.75rem; text-align: left; border: 1px solid #dadce0; }
         th { background: #f8f9fa; font-weight: 600; }
+        #hands-table td { padding: 0.4rem 0.5rem; }
+        #hands-table th { padding: 0.4rem 0.5rem; }
         .toast { position: fixed; bottom: 2rem; right: 2rem; background: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; }
         .toast.show { display: block; }
         .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; }
@@ -35,7 +38,9 @@
         .dealer-select-item:hover { background: #e8f5e9; }
         .dealer-select-item.selected { background: #1a73e8; color: white; font-weight: 600; }
         .dealer-order-badge { background: white; color: #1a73e8; padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: 700; font-size: 0.875rem; }
-    </style>
+</style>
+
+    
 </head>
 <body>
     <div class="header">
@@ -67,8 +72,7 @@
                     <strong>Dealer Rotation:</strong>
                     <div id="dealer-list" style="margin-top: 0.5rem; display: flex; gap: 1rem; flex-wrap: wrap;"></div>
                 </div>
-                <input type="number" id="score-a" placeholder="Team A Score" step="0.5">
-                <input type="number" id="score-b" placeholder="Team B Score" step="0.5">
+                
                 <button class="btn" id="btn-add-score">Add Score</button>
                 <button class="btn" id="btn-dealers" style="background: #34a853;">Select Dealers</button>
                 <button class="btn" id="btn-reset-dealers" style="background: #f57c00;">Reset Dealers</button>
@@ -78,11 +82,46 @@
                     <div><h4>Team A</h4><div class="score-display" id="total-a">0</div><div id="players-a">No players</div></div>
                     <div><h4>Team B</h4><div class="score-display" id="total-b" style="color: #f57c00;">0</div><div id="players-b">No players</div></div>
                 </div>
-                <table><thead><tr><th>Dealer</th><th>A</th><th>B</th></tr></thead><tbody id="hands-table"><tr><td colspan="3">No hands yet</td></tr></tbody></table>
-                <div id="total-summary" style="display: none; margin-top: 2rem;">
-                    <h3>Total Summary</h3>
-                    <table><thead><tr><th>Team</th><th>Players</th><th>1</th><th>2</th><th>3</th><th>Total</th></tr></thead><tbody id="summary-body"></tbody></table>
-                </div>
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-top: 2rem;">
+    <div>
+        <h3>Hands</h3>
+        <table style="width: 100%;"><thead><tr><th style="width: 50%; padding: 0.5rem;">Dealer</th><th style="width: 25%; padding: 0.5rem;">A</th><th style="width: 25%; padding: 0.5rem;">B</th></tr></thead><tbody id="hands-table"><tr><td colspan="3" style="padding: 0.5rem;">No hands yet</td></tr></tbody></table>
+
+            
+            </div>
+    <div>
+        <div id="total-summary">
+            <h3>Total Summary</h3>
+            <table><thead><tr><th>Team</th><th>Players</th><th>Game 1</th><th>Game 2</th><th>Game 3</th><th>Total</th></tr></thead><tbody id="summary-body"><tr><td>A</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr><tr><td>B</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr></tbody></table>
+        </div>
+
+<div style="margin-top: 2rem;">
+    <h3>Sets</h3>
+    <div style="border: 1px solid #dadce0; border-radius: 8px; overflow: hidden;">
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table style="width: 100%; table-layout: fixed;">
+                <colgroup>
+                    <col style="width: 80px;">
+                </colgroup>
+                <thead style="position: sticky; top: 0; z-index: 10;">
+                    <tr id="sets-header-row" style="background: #f8f9fa;">
+                        <th>Set #</th>
+                    </tr>
+                    <tr id="sets-totals-row" style="background: #f8f9fa; font-weight: 700; position: sticky; top: 49px; z-index: 9;">
+                        <td colspan="10">No sets yet</td>
+                    </tr>
+                </thead>
+                <tbody id="sets-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+        
+     
+        
+    </div>
+</div>
             </div>
         </div>
         <div id="content-players" class="tab-content">
@@ -124,7 +163,7 @@
         <div style="margin-top: 2rem;">
             <div style="display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid #dadce0;">
                 <span style="font-weight: 600; color: #5f6368;">Version</span>
-                <span style="color: #202124;">1.4.0</span>
+                <span style="color: #202124;">1.5.0</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid #dadce0;">
                 <span style="font-weight: 600; color: #5f6368;">Last Updated</span>
@@ -141,6 +180,22 @@
         
     </div>
     <div class="toast" id="toast"></div>
+
+<div class="modal" id="score-modal">
+    <div class="modal-content">
+        <h2>Add Score</h2>
+        <p style="color: #5f6368; margin: 1rem 0;">Enter scores for this hand</p>
+        <label><strong>Team A Score:</strong></label>
+        <input type="number" id="score-a-modal" placeholder="Team A Score" step="0.5" style="width: 100%; margin-bottom: 1rem;">
+        <label><strong>Team B Score:</strong></label>
+        <input type="number" id="score-b-modal" placeholder="Team B Score" step="0.5" style="width: 100%; margin-bottom: 1rem;">
+        <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
+            <button class="btn" id="btn-confirm-score">Add Score</button>
+            <button class="btn" id="btn-cancel-score" style="background: #5f6368;">Cancel</button>
+        </div>
+    </div>
+</div>
+    
     <div class="modal" id="dealer-modal">
         <div class="modal-content">
             <h2>Select Dealer Order</h2>
@@ -261,8 +316,8 @@ function updateUI() {
     document.getElementById('players-a').textContent = g.teamA.join(', ') || 'No players';
     document.getElementById('players-b').textContent = g.teamB.join(', ') || 'No players';
     var totA = 0, totB = 0; g.hands.forEach(function(h) { totA += h.scoreA; totB += h.scoreB; });
-    document.getElementById('total-a').textContent = totA.toFixed(1);
-    document.getElementById('total-b').textContent = totB.toFixed(1);
+    document.getElementById('total-a').textContent = totA.toFixed(0);
+    document.getElementById('total-b').textContent = totB.toFixed(0);
     var tb = document.getElementById('hands-table');
     if (g.hands.length === 0) { tb.innerHTML = '<tr><td colspan="3">No hands yet</td></tr>'; }
     else { var rA = 0, rB = 0; tb.innerHTML = g.hands.map(function(h) { rA += h.scoreA; rB += h.scoreB; return '<tr><td>' + h.dealer + '</td><td>' + rA.toFixed(1) + '</td><td>' + rB.toFixed(1) + '</td></tr>'; }).join(''); }
@@ -289,11 +344,12 @@ function updateUI() {
     if (g.currentSetGames.length > 0) { document.getElementById('total-summary').style.display = 'block'; var sA = ['', '', ''], sB = ['', '', ''], tA = 0, tB = 0; g.currentSetGames.forEach(function(game, i) { sA[i] = game.scoreA.toFixed(1); sB[i] = game.scoreB.toFixed(1); tA += game.scoreA; tB += game.scoreB; }); document.getElementById('summary-body').innerHTML = '<tr><td>A</td><td>' + g.teamA.join(', ') + '</td><td>' + sA[0] + '</td><td>' + sA[1] + '</td><td>' + sA[2] + '</td><td><strong>' + tA.toFixed(1) + '</strong></td></tr><tr><td>B</td><td>' + g.teamB.join(', ') + '</td><td>' + sB[0] + '</td><td>' + sB[1] + '</td><td>' + sB[2] + '</td><td><strong>' + tB.toFixed(1) + '</strong></td></tr>'; }
     if (g.setHistory.length > 0) { document.getElementById('set-history-body').innerHTML = g.setHistory.map(function(s, i) { var w = s.teamAScore > s.teamBScore ? 'Team A' : 'Team B'; return '<tr><td>' + (i + 1) + '</td><td>' + s.teamA.join(', ') + '</td><td>' + s.teamB.join(', ') + '</td><td>' + s.teamAScore.toFixed(1) + '</td><td>' + s.teamBScore.toFixed(1) + '</td><td><strong>' + w + '</strong></td></tr>'; }).join(''); }
 
+// Update Total Summary
 if (g.currentSetGames.length > 0) {
     var sA = ['', '', ''], sB = ['', '', ''], tA = 0, tB = 0;
     g.currentSetGames.forEach(function(game, i) {
-        sA[i] = game.scoreA.toFixed(1);
-        sB[i] = game.scoreB.toFixed(1);
+        sA[i] = game.scoreA.toFixed(0);
+        sB[i] = game.scoreB.toFixed(0);
         tA += game.scoreA;
         tB += game.scoreB;
     });
@@ -303,22 +359,29 @@ if (g.currentSetGames.length > 0) {
 } else {
     document.getElementById('summary-body').innerHTML = 
         '<tr><td>A</td><td>' + (g.teamA.join(', ') || '-') + '</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>' +
-        '<tr><td>B</td><td>' + (g.teamB.join(', ') || '-') + '</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>';
+        '<tr><td>B</td><td>' + (g.teamB.join(', ') || '-') + '</td><td>-</td><td>-</td><td>-</td></tr>';
 }
 
 // Update Sets table
 updateSetsTable();
 
 
+
 }
 
 function updateSetsTable() {
+    var headerRow = document.getElementById('sets-header-row');
+    var totalsRow = document.getElementById('sets-totals-row');
+    var body = document.getElementById('sets-body');
+    
     if (g.setHistory.length === 0) {
-        document.getElementById('sets-body').innerHTML = '<tr><td colspan="10">No sets yet</td></tr>';
+        headerRow.innerHTML = '<th>Set #</th>';
+        totalsRow.innerHTML = '<td colspan="10">No sets yet</td>';
+        body.innerHTML = '';
         return;
     }
     
-    // Get all unique players
+    // Collect unique players
     var allPlayers = [];
     g.setHistory.forEach(function(set) {
         set.teamA.forEach(function(p) {
@@ -329,57 +392,82 @@ function updateSetsTable() {
         });
     });
     
-    // Build header
-    var headerHtml = '<tr><th>Set #</th>';
-    allPlayers.forEach(function(p) {
-        headerHtml += '<th>' + p + '</th>';
-    });
-    headerHtml += '</tr>';
-    document.getElementById('sets-header').innerHTML = headerHtml;
-    
-    // Build rows
-    var bodyHtml = '';
+    // Calculate totals
     var playerTotals = {};
     allPlayers.forEach(function(p) { playerTotals[p] = 0; });
     
-    g.setHistory.forEach(function(set, idx) {
-        bodyHtml += '<tr><td>' + (g.setHistory.length - idx) + '</td>';
-        
-        var teamACount = set.teamA.length;
-        var teamBCount = set.teamB.length;
-        var captainA = teamACount < teamBCount ? 1.5 : 1;
-        var captainB = teamBCount < teamACount ? 1.5 : 1;
+    g.setHistory.forEach(function(set) {
+        var aMult = set.teamA.length < set.teamB.length ? 1.5 : 1;
+        var bMult = set.teamB.length < set.teamA.length ? 1.5 : 1;
         
         allPlayers.forEach(function(p) {
-            var score = 0;
             if (set.teamA.includes(p)) {
-                score = set.teamAScore * captainA;
-            } else if (set.teamB.includes(p)) {
-                score = set.teamBScore * captainB;
+                playerTotals[p] += set.teamAScore * aMult;
             }
+            if (set.teamB.includes(p)) {
+                playerTotals[p] += set.teamBScore * bMult;
+            }
+        });
+    });
+    
+  
+
+// Build header
+var headerHtml = '<th>Set #</th>';
+var colgroupHtml = '<col style="width: 80px;">';
+allPlayers.forEach(function(p) {
+    headerHtml += '<th>' + p + '</th>';
+    colgroupHtml += '<col style="width: 120px;">';
+});
+
+// Add colgroup to table
+var table = document.querySelector('#sets-header-row').closest('table');
+var existingColgroup = table.querySelector('colgroup');
+if (existingColgroup) {
+    existingColgroup.innerHTML = colgroupHtml;
+} else {
+    var colgroup = document.createElement('colgroup');
+    colgroup.innerHTML = colgroupHtml;
+    table.insertBefore(colgroup, table.firstChild);
+}
+
+headerRow.innerHTML = headerHtml;
+
+    
+    // Build totals row
+    var totalsHtml = '<th>Total</th>';
+    allPlayers.forEach(function(p) {
+        var total = playerTotals[p];
+        var color = total >= 0 ? '#34a853' : '#ea4335';
+        totalsHtml += '<th style="color: ' + color + ';">$' + total.toFixed(1) + '</th>';
+    });
+    totalsRow.innerHTML = totalsHtml;
+    
+    // Build body rows (Scrollable)
+    var bodyHtml = '';
+    g.setHistory.forEach(function(set, idx) {
+        bodyHtml += '<tr><td>' + (g.setHistory.length - idx) + '</td>';
+        var aMult = set.teamA.length < set.teamB.length ? 1.5 : 1;
+        var bMult = set.teamB.length < set.teamA.length ? 1.5 : 1;
+        
+        allPlayers.forEach(function(p) {
+            var val = 0;
+            if (set.teamA.includes(p)) val = set.teamAScore * aMult;
+            if (set.teamB.includes(p)) val = set.teamBScore * bMult;
             
-            if (score !== 0) {
-                playerTotals[p] += score;
-                var color = score >= 0 ? '#34a853' : '#ea4335';
-                bodyHtml += '<td style="color: ' + color + '; font-weight: 600;">$' + score.toFixed(1) + '</td>';
+            if (val !== 0) {
+                bodyHtml += '<td style="color:#1a73e8;font-weight:600;">$' + val.toFixed(1) + '</td>';
             } else {
                 bodyHtml += '<td>-</td>';
             }
         });
         bodyHtml += '</tr>';
     });
-    
-    // Add totals row
-    bodyHtml += '<tr style="background: #f8f9fa; font-weight: 700;"><td>Total</td>';
-    allPlayers.forEach(function(p) {
-        var total = playerTotals[p];
-        var color = total >= 0 ? '#34a853' : '#ea4335';
-        bodyHtml += '<td style="color: ' + color + ';">$' + total.toFixed(1) + '</td>';
-    });
-    bodyHtml += '</tr>';
-    
-    document.getElementById('sets-body').innerHTML = bodyHtml;
-}
+    body.innerHTML = bodyHtml;
+}        
+        
+     
+        
         
 function toggleTeam(p) { var inA = g.teamA.includes(p), inB = g.teamB.includes(p); if (!inA && !inB) { if (g.teamA.length >= 3) { toast('Team A full'); return; } g.teamA.push(p); toast(p + ' → A'); } else if (inA) { if (g.teamB.length >= 3) { toast('Team B full'); return; } g.teamA = g.teamA.filter(function(x) { return x !== p; }); g.teamB.push(p); toast(p + ' → B'); } else { g.teamB = g.teamB.filter(function(x) { return x !== p; }); toast(p + ' removed'); } if (g.currentGameId) sb.from('games').update({ team_a_players: g.teamA, team_b_players: g.teamB }).eq('id', g.currentGameId).then(function() {}); updateUI(); }
 
@@ -399,8 +487,8 @@ document.getElementById('btn-add-player').onclick = function() {
     }); 
 };
 
-document.getElementById('btn-add-score').onclick = function() { var sA = parseFloat(document.getElementById('score-a').value), sB = parseFloat(document.getElementById('score-b').value); if (isNaN(sA) || isNaN(sB)) { toast('Enter valid scores'); return; } if (g.dealers.length === 0) { toast('Select dealers first'); return; } var d = g.dealers[g.hands.length % g.dealers.length]; sb.from('hands').insert({ game_id: g.currentGameId, dealer: d, score_a: sA, score_b: sB, hand_order: g.hands.length }).then(function() { g.hands.push({ dealer: d, scoreA: sA, scoreB: sB }); document.getElementById('score-a').value = ''; document.getElementById('score-b').value = ''; updateUI(); toast('Score added!'); }); };
 
+        
 document.getElementById('btn-dealers').onclick = function() { 
     var all = g.teamA.concat(g.teamB); 
     if (all.length < 4) { toast('Need 4+ players'); return; }
@@ -478,9 +566,78 @@ document.getElementById('btn-save-stakes').onclick = function() { var ns = { gam
 
 function calcScore(w) { var tot = { a: 0, b: 0 }; g.hands.forEach(function(h) { tot.a += h.scoreA; tot.b += h.scoreB; }); var bA = 0, bB = 0; g.hands.forEach(function(h) { if (h.scoreA < 0) bA++; if (h.scoreB < 0) bB++; }); var last = g.hands[g.hands.length - 1], gA = last ? last.scoreA : 0, gB = last ? last.scoreB : 0, fA = 0, fB = 0; if (w === 'A') { var diff = Math.max(0, tot.a - tot.b), base = stakes.gameScore + (bB * stakes.bump), mult = 1; if (gA >= 2 && gA <= 4 && tot.b <= 0) mult = 2; else if (gA === 9 && tot.b >= 1) mult = 2; else if (gA === 9 && tot.b <= 0) mult = 4; else if (gA === 15 && tot.b >= 1) mult = 3; else if (gA === 15 && tot.b <= 0) mult = 6; fA = (base * mult) + (diff * stakes.points); fB = -fA; } else { var diff = Math.max(0, tot.b - tot.a), base = stakes.gameScore + (bA * stakes.bump), mult = 1; if (gB >= 2 && gB <= 4 && tot.a <= 0) mult = 2; else if (gB === 9 && tot.a >= 1) mult = 2; else if (gB === 9 && tot.a <= 0) mult = 4; else if (gB === 15 && tot.a >= 1) mult = 3; else if (gB === 15 && tot.a <= 0) mult = 6; fB = (base * mult) + (diff * stakes.points); fA = -fB; } if (g.teamA.length === 2 && g.teamB.length === 3) fA *= 1.5; else if (g.teamB.length === 2 && g.teamA.length === 3) fB *= 1.5; return { scoreA: fA, scoreB: fB, bumpsA: bA, bumpsB: bB, runningA: tot.a, runningB: tot.b }; }
 
-document.getElementById('btn-end-game').onclick = function() { if (g.hands.length === 0) { toast('No hands'); return; } var tot = { a: 0, b: 0 }; g.hands.forEach(function(h) { tot.a += h.scoreA; tot.b += h.scoreB; }); if (Math.max(tot.a, tot.b) < 9) { toast('Winner needs 9+ points'); return; } var wA = calcScore('A'), wB = calcScore('B'), msg = 'SELECT WINNER:\n\nA: Run=' + tot.a.toFixed(1) + ' Final=' + wA.scoreA.toFixed(1) + ' OppBumps=' + wA.bumpsB + '\nB: Run=' + tot.b.toFixed(1) + ' Final=' + wB.scoreB.toFixed(1) + ' OppBumps=' + wB.bumpsA + '\n\nOK=A Cancel=B', choice = confirm(msg), w = choice ? 'A' : 'B', f = choice ? wA : wB; sb.from('games').update({ winner: w === 'A' ? 'TeamA' : 'TeamB', score_a: f.scoreA, score_b: f.scoreB, running_a: f.runningA, running_b: f.runningB, bumps_a: f.bumpsA, bumps_b: f.bumpsB, hands_played: g.hands.length, completed_at: new Date().toISOString() }).eq('id', g.currentGameId).then(function() { var gr = { gameNumber: g.gameNumber, winner: w, scoreA: f.scoreA, scoreB: f.scoreB, handsPlayed: g.hands.length, teamA: g.teamA.slice(), teamB: g.teamB.slice() }; g.completedGames.unshift(gr); g.currentSetGames.push(gr); toast('Game ' + g.gameNumber + ' done! ' + w + ' wins ' + Math.abs(w === 'A' ? f.scoreA : f.scoreB).toFixed(1)); if (g.currentSetGames.length === 3) { var stA = 0, stB = 0; g.currentSetGames.forEach(function(game) { stA += game.scoreA; stB += game.scoreB; }); var aWins = g.currentSetGames.filter(function(game) { return game.winner === 'A'; }).length, bWins = g.currentSetGames.filter(function(game) { return game.winner === 'B'; }).length; if (aWins === 3) { stA += stakes.bonus; stB -= stakes.bonus; toast('A wins all 3! +$' + stakes.bonus); } else if (bWins === 3) { stB += stakes.bonus; stA -= stakes.bonus; toast('B wins all 3! +$' + stakes.bonus); } sb.from('sets').insert({ team_a_players: g.teamA, team_b_players: g.teamB, team_a_score: stA, team_b_score: stB }).then(function() { g.setHistory.unshift({ teamA: g.teamA.slice(), teamB: g.teamB.slice(), teamAScore: stA, teamBScore: stB }); toast('Set done! ' + (stA > stB ? 'A' : 'B') + ' wins!'); g.currentSetGames = []; }); } g.hands = []; sb.from('games').select('game_number').order('game_number', { ascending: false }).limit(1).then(function(r) { var num = r.data && r.data.length > 0 ? r.data[0].game_number + 1 : 1; return sb.from('games').insert({ game_number: num, team_a_players: g.teamA, team_b_players: g.teamB }).select().single(); }).then(function(r) { if (r.data) { g.currentGameId = r.data.id; g.gameNumber = r.data.game_number; } updateUI(); }); }); };
+document.getElementById('btn-end-game').onclick = function() { 
+    if (g.hands.length === 0) { 
+        alert('No hands played yet! Add scores first.'); 
+        return; 
+    } 
+    var tot = { a: 0, b: 0 }; 
+    g.hands.forEach(function(h) { 
+        tot.a += h.scoreA; 
+        tot.b += h.scoreB; 
+    }); 
+    if (Math.max(tot.a, tot.b) < 9) { 
+        alert('Cannot end game yet!\n\nCurrent scores:\nTeam A: ' + tot.a.toFixed(1) + '\nTeam B: ' + tot.b.toFixed(1) + '\n\nThe winning team needs at least 9 points.'); 
+        return; 
+    } 
+    var wA = calcScore('A'), wB = calcScore('B'), msg = 'SELECT WINNER:\n\nA: Run=' + tot.a.toFixed(1) + ' Final=' + wA.scoreA.toFixed(1) + ' OppBumps=' + wA.bumpsB + '\nB: Run=' + tot.b.toFixed(1) + ' Final=' + wB.scoreB.toFixed(1) + ' OppBumps=' + wB.bumpsA + '\n\nOK=A Cancel=B', choice = confirm(msg), w = choice ? 'A' : 'B', f = choice ? wA : wB; sb.from('games').update({ winner: w === 'A' ? 'TeamA' : 'TeamB', score_a: f.scoreA, score_b: f.scoreB, running_a: f.runningA, running_b: f.runningB, bumps_a: f.bumpsA, bumps_b: f.bumpsB, hands_played: g.hands.length, completed_at: new Date().toISOString() }).eq('id', g.currentGameId).then(function() { var gr = { gameNumber: g.gameNumber, winner: w, scoreA: f.scoreA, scoreB: f.scoreB, handsPlayed: g.hands.length, teamA: g.teamA.slice(), teamB: g.teamB.slice() }; g.completedGames.unshift(gr); g.currentSetGames.push(gr); toast('Game ' + g.gameNumber + ' done! ' + w + ' wins ' + Math.abs(w === 'A' ? f.scoreA : f.scoreB).toFixed(1)); if (g.currentSetGames.length === 3) { var stA = 0, stB = 0; g.currentSetGames.forEach(function(game) { stA += game.scoreA; stB += game.scoreB; }); var aWins = g.currentSetGames.filter(function(game) { return game.winner === 'A'; }).length, bWins = g.currentSetGames.filter(function(game) { return game.winner === 'B'; }).length; if (aWins === 3) { stA += stakes.bonus; stB -= stakes.bonus; toast('A wins all 3! +$' + stakes.bonus); } else if (bWins === 3) { stB += stakes.bonus; stA -= stakes.bonus; toast('B wins all 3! +$' + stakes.bonus); } sb.from('sets').insert({ team_a_players: g.teamA, team_b_players: g.teamB, team_a_score: stA, team_b_score: stB }).then(function() { g.setHistory.unshift({ teamA: g.teamA.slice(), teamB: g.teamB.slice(), teamAScore: stA, teamBScore: stB }); toast('Set done! ' + (stA > stB ? 'A' : 'B') + ' wins!'); g.currentSetGames = []; }); } g.hands = []; sb.from('games').select('game_number').order('game_number', { ascending: false }).limit(1).then(function(r) { var num = r.data && r.data.length > 0 ? r.data[0].game_number + 1 : 1; return sb.from('games').insert({ game_number: num, team_a_players: g.teamA, team_b_players: g.teamB }).select().single(); }).then(function(r) { if (r.data) { g.currentGameId = r.data.id; g.gameNumber = r.data.game_number; } updateUI(); }); }); };
 
+        
 load();
+
+document.getElementById('btn-add-score').onclick = function() {
+    if (g.dealers.length === 0) {
+        if (confirm('Dealers not set! Would you like to select dealers now?')) {
+            document.getElementById('btn-dealers').click();
+        }
+        return;
+    }
+    document.getElementById('score-a-modal').value = '';
+    document.getElementById('score-b-modal').value = '';
+    document.getElementById('score-modal').classList.add('show');
+    document.getElementById('score-a-modal').focus();
+};
+
+document.getElementById('btn-confirm-score').onclick = function() {
+    var sA = document.getElementById('score-a-modal').value.trim();
+    var sB = document.getElementById('score-b-modal').value.trim();
+    
+    // Both blank is not allowed
+    if (sA === '' && sB === '') {
+        toast('At least one team must have a score');
+        return;
+    }
+    
+    // Treat blank as 0
+    sA = sA === '' ? 0 : parseFloat(sA);
+    sB = sB === '' ? 0 : parseFloat(sB);
+    
+    // Check if valid numbers
+    if (isNaN(sA) || isNaN(sB)) {
+        toast('Enter valid scores');
+        return;
+    }
+    
+    var d = g.dealers[g.hands.length % g.dealers.length];
+    sb.from('hands').insert({
+        game_id: g.currentGameId,
+        dealer: d,
+        score_a: sA,
+        score_b: sB,
+        hand_order: g.hands.length
+    }).then(function() {
+        g.hands.push({ dealer: d, scoreA: sA, scoreB: sB });
+        document.getElementById('score-modal').classList.remove('show');
+        updateUI();
+        toast('Score added!');
+    });
+};
+        
+
+document.getElementById('btn-cancel-score').onclick = function() {
+    document.getElementById('score-modal').classList.remove('show');
+};
+        
     </script>
 </body>
 </html>
