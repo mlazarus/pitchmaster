@@ -227,6 +227,23 @@ var editingHandIndex = null;
         
 function toast(m) { var t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 2000); }
 
+function editHand(index) {
+    editingHandIndex = index;
+
+    var h = g.hands[index];
+
+    document.querySelectorAll('#hands-table tr')
+    .forEach(r => r.classList.remove('editing'));
+
+document.querySelectorAll('#hands-table tr')[index]
+    ?.classList.add('editing');
+    
+    document.getElementById('score-a-modal').value = h.scoreA;
+    document.getElementById('score-b-modal').value = h.scoreB;
+
+    document.getElementById('score-modal').classList.add('show');
+}
+        
 document.querySelectorAll('.tab').forEach(function(tab) {
     tab.onclick = function() {
         var target = this.getAttribute('data-tab');
@@ -389,22 +406,7 @@ updateSetsTable();
 
 }
 
-        function editHand(index) {
-    editingHandIndex = index;
 
-    var h = g.hands[index];
-
-    document.querySelectorAll('#hands-table tr')
-    .forEach(r => r.classList.remove('editing'));
-
-document.querySelectorAll('#hands-table tr')[index]
-    ?.classList.add('editing');
-    
-    document.getElementById('score-a-modal').value = h.scoreA;
-    document.getElementById('score-b-modal').value = h.scoreB;
-
-    document.getElementById('score-modal').classList.add('show');
-}
 
         
 function updateSetsTable() {
